@@ -1,0 +1,84 @@
+<Window x:Class="VAdapter.App.Views.MacroEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="マクロの編集" Height="600" Width="820"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="12">
+        <!-- 下部ボタン -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="OK" Width="90" Margin="0,0,8,0" IsDefault="True" Click="OnOk"/>
+            <Button Content="キャンセル" Width="90" IsCancel="True"/>
+        </StackPanel>
+
+        <!-- 基本情報 -->
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="名前" VerticalAlignment="Center" Margin="0,4,10,4"/>
+            <TextBox  Grid.Row="0" Grid.Column="1" x:Name="NameBox" Margin="0,4"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="ショートカット" VerticalAlignment="Center" Margin="0,4,10,4"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,4">
+                <TextBox x:Name="ShortcutBox" Width="260" IsReadOnly="True" Focusable="True"
+                         PreviewKeyDown="OnShortcutKeyDown" GotFocus="OnShortcutGotFocus" LostFocus="OnShortcutLostFocus"
+                         Text="(クリックしてキーを押す)"/>
+                <Button Content="クリア" Width="70" Margin="8,0,0,0" Click="OnClearShortcut"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- スクリプト（対象アプリ別） / 命令 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Grid.Column="0" Header="スクリプト（対象アプリ別）" Margin="0,0,8,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="追加 ▾" Width="90" Margin="0,0,6,0" Click="OnAddScriptClick"/>
+                        <Button Content="削除" Width="80" Click="OnDeleteScript"/>
+                    </StackPanel>
+                    <ListBox x:Name="ScriptList" DisplayMemberPath="Display"
+                             SelectionChanged="OnScriptSelectionChanged"/>
+                </DockPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Column="1" Header="命令">
+                <DockPanel x:Name="InstructionArea" IsEnabled="False">
+                    <StackPanel DockPanel.Dock="Right" Margin="8,0,0,0" Width="110">
+                        <Button Content="追加 ▾" Margin="0,0,0,6" Click="OnAddClick">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="アプリ切替待ち" Tag="waitactivation" Click="OnAddInstruction"/>
+                                    <MenuItem Header="待機 (ms)" Tag="wait" Click="OnAddInstruction"/>
+                                    <MenuItem Header="クリック" Tag="click" Click="OnAddInstruction"/>
+                                    <MenuItem Header="キー送信" Tag="sendkeys" Click="OnAddInstruction"/>
+                                    <MenuItem Header="ウィンドウ表示待ち" Tag="waitwindow" Click="OnAddInstruction"/>
+                                    <MenuItem Header="ダイアログ表示待ち" Tag="waitdialog" Click="OnAddInstruction"/>
+                                    <MenuItem Header="操作対象の切り替え" Tag="switchtarget" Click="OnAddInstruction"/>
+                                    <MenuItem Header="テキスト表示待ち" Tag="waittext" Click="OnAddInstruction"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
+                        <Button Content="編集" Margin="0,0,0,6" Click="OnEditInstruction"/>
+                        <Button Content="複製" Margin="0,0,0,6" Click="OnDuplicateInstruction"/>
+                        <Button Content="削除" Margin="0,0,0,6" Click="OnDeleteInstruction"/>
+                        <Button Content="↑ 上へ" Margin="0,0,0,6" Click="OnMoveUp"/>
+                        <Button Content="↓ 下へ" Click="OnMoveDown"/>
+                    </StackPanel>
+
+                    <ListBox x:Name="InstructionList" DisplayMemberPath="Summary"
+                             MouseDoubleClick="OnEditInstruction"/>
+                </DockPanel>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
+</Window>

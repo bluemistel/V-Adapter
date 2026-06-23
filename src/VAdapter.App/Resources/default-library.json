@@ -1,0 +1,461 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "id": "a2ff505e5764430ab964d575066626ad",
+      "name": "A.I.VOICE2",
+      "processName": "aivoice",
+      "windowTitlePattern": "A.I.VOICE2 Editor",
+      "titleIsRegex": false,
+      "windowClass": "FLUTTER_RUNNER_WIN32_WINDOW",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "34f435a6eda84498837599286e9a3d32",
+      "name": "CeVIO AI",
+      "processName": "CeVIO AI",
+      "windowTitlePattern": "CeVIO AI",
+      "titleIsRegex": false,
+      "windowClass": "HwndWrapper[CeVIO AI.exe;;77175eec-3105-4e25-b801-4c4c74749f50]",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "88583c921c7448d4a073ac358862f5df",
+      "name": "VOICEPEAK",
+      "processName": "voicepeak",
+      "windowTitlePattern": "VOICEPEAK",
+      "titleIsRegex": false,
+      "windowClass": "JUCE_19ef2440e4c",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "23340271f61a4a528ee888f8a59dd318",
+      "name": "VoiSona Talk",
+      "processName": "VoiSona Talk",
+      "windowTitlePattern": "VoiSona Talk Editor",
+      "titleIsRegex": false,
+      "windowClass": "JUCE_19ef2762b5c",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "d9f748a10ef94f068a5c6069ccae13a1",
+      "name": "VOICEVOX",
+      "processName": "VOICEVOX",
+      "windowTitlePattern": "VOICEVOX",
+      "titleIsRegex": false,
+      "windowClass": "Chrome_WidgetWin_1",
+      "coordinateMode": "Relative"
+    }
+  ],
+  "macros": [
+    {
+      "id": "d02f83fb8acc4ff9b1baac11592b172f",
+      "name": "\u97F3\u58F0\u306E\u518D\u751F",
+      "isBuiltIn": true,
+      "isEnabled": true,
+      "shortcut": {
+        "modifiers": "Control",
+        "virtualKey": 32,
+        "keyName": "Space"
+      },
+      "scripts": [
+        {
+          "id": "47a1e3ac3dd24d52b5fa532f5b64148b",
+          "targetApplicationId": "34f435a6eda84498837599286e9a3d32",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "e358c5bfd1724e3cb5bd0b1a63331204"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 200,
+              "id": "d9ae7b9ad9b3488c938cf7d1497aebc9"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Shift",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "ce363be32f63402ca2b3ab2f505a9174"
+            }
+          ]
+        },
+        {
+          "id": "1178f44c074641508f1550955bac2b32",
+          "targetApplicationId": "88583c921c7448d4a073ac358862f5df",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "8870829dc44e45a9abeee8ce7b73a207"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 750,
+              "id": "3c7c1901a4a0448b871d34fa86adf50d"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 9,
+                "keyName": "Tab"
+              },
+              "id": "3fcdbe92e76d4dee813e70f695a7d3c1"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "2e434af3ba914c238f01e7b043303c76"
+            }
+          ]
+        },
+        {
+          "id": "49c038d7ffb14ad2b87b662e7bc0e7f4",
+          "targetApplicationId": "23340271f61a4a528ee888f8a59dd318",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "e2deaee7475c4611a2e68bd2ede3935e"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "b18ceae4f29144398888dbd22393af6d"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Shift",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "703a37bff81f4c81a746c8a91f8907c0"
+            }
+          ]
+        },
+        {
+          "id": "eb0c11a1db0f4d48a1677d1640259715",
+          "targetApplicationId": "a2ff505e5764430ab964d575066626ad",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "83143bce59b04610941b038d13e48374"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "5046e20b14424e0d8eda6a26fda67551"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 116,
+                "keyName": "F5"
+              },
+              "id": "9e8ddddc0da64617bbaa25c838452322"
+            }
+          ]
+        },
+        {
+          "id": "5159d7c14ff142df9b55836aa5dfdb0c",
+          "targetApplicationId": "d9f748a10ef94f068a5c6069ccae13a1",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "de8bf73955f0476781246dff74afe388"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "e20fa58c0bd543bb96d5b416a882fd5b"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 9,
+                "keyName": "Tab"
+              },
+              "id": "30759aa18b9e4422807bbd6bb4b04b7a"
+            },
+            {
+              "kind": "click",
+              "x": 543,
+              "y": 51,
+              "anchor": "TopLeft",
+              "button": "Left",
+              "id": "22f9acdce988453b82da6ddc72dd1690"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "75cf8021bc254c8ea41d1c4d6f698734"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bb06a00675a94628bc6ff6988d7fb61b",
+      "name": "\u97F3\u58F0\u306E\u4FDD\u5B58",
+      "isBuiltIn": true,
+      "isEnabled": true,
+      "shortcut": {
+        "modifiers": "Control",
+        "virtualKey": 115,
+        "keyName": "F4"
+      },
+      "scripts": [
+        {
+          "id": "912558009015430c9a55f586de2a5398",
+          "targetApplicationId": "a2ff505e5764430ab964d575066626ad",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "565ceb131d7a4675af18a91d81fccb1a"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 700,
+              "id": "aa92b63f6aef4d0aafa2611c31ce639b"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 69,
+                "keyName": "E"
+              },
+              "id": "8e25306e9e8a4c51a9ff21ebff3d8051"
+            },
+            {
+              "kind": "waittext",
+              "text": "{Character}",
+              "timeoutMs": 5000,
+              "id": "3aece7dc9f004902801396730deadfa7"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 13,
+                "keyName": "Return"
+              },
+              "id": "9e365de1a442464a8c28eb0935cc75de"
+            }
+          ]
+        },
+        {
+          "id": "6e43f5fdc0a04051b08121955893b260",
+          "targetApplicationId": "34f435a6eda84498837599286e9a3d32",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "2dab92fe370c488786d3890e4f37faf6"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 87,
+                "keyName": "W"
+              },
+              "id": "e58dfdc1be4a4b24ab6f1bea7bcd6932"
+            },
+            {
+              "kind": "waitdialog",
+              "titleContains": "\u4FDD\u5B58",
+              "dialogClass": "#32770",
+              "bringToForeground": true,
+              "timeoutMs": 4000,
+              "id": "7a3e4377f2d642c6804958ea9ad3bc91"
+            },
+            {
+              "kind": "switchtarget",
+              "target": "Dialog",
+              "titleContains": "\u4FDD\u5B58",
+              "dialogClass": "#32770",
+              "timeoutMs": 5000,
+              "id": "e76bc7d1568c4b169c440124eac3ae61"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 1000,
+              "id": "7a79090ef67a4038aa22c91df64bce66"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 13,
+                "keyName": "Return"
+              },
+              "id": "15008385b7bc499c9c6d3d633c270028"
+            }
+          ]
+        },
+        {
+          "id": "64563b07a5d64dee894e81534e1f587b",
+          "targetApplicationId": "d9f748a10ef94f068a5c6069ccae13a1",
+          "instructions": [
+            {
+              "kind": "waitwindow",
+              "timeoutMs": 5000,
+              "id": "644efdb24fcd4f1e81dd1c1a998ab989"
+            },
+            {
+              "kind": "click",
+              "x": 256,
+              "y": 55,
+              "anchor": "TopLeft",
+              "button": "Left",
+              "id": "94884a1dd0a34bde88c1e761e551b326"
+            },
+            {
+              "kind": "waitdialog",
+              "titleContains": "\u97F3\u58F0\u3092\u4FDD\u5B58",
+              "dialogClass": "#32770",
+              "bringToForeground": true,
+              "timeoutMs": 5000,
+              "id": "7fcb67d436984204bfb0fcef93534b41"
+            },
+            {
+              "kind": "switchtarget",
+              "target": "Dialog",
+              "titleContains": "\u97F3\u58F0\u3092\u4FDD\u5B58",
+              "dialogClass": "#32770",
+              "timeoutMs": 5000,
+              "id": "a3354342aadf4ce99b360a89cec057bb"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 13,
+                "keyName": "Return"
+              },
+              "id": "3a95d1f18a3e4db7918d2601d0a00cb5"
+            }
+          ]
+        },
+        {
+          "id": "5796e6fe429f49a29a0ae9d837f762a1",
+          "targetApplicationId": "23340271f61a4a528ee888f8a59dd318",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "812a8cbe5c92427b9e35a162f7c8ed5a"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 69,
+                "keyName": "E"
+              },
+              "id": "5b2b61d7f67e4a48ab56451d6e1a7240"
+            },
+            {
+              "kind": "waitdialog",
+              "titleContains": "WAV\u3092\u51FA\u529B",
+              "dialogClass": "#32770",
+              "bringToForeground": true,
+              "timeoutMs": 4000,
+              "id": "76ac310b9a344a589eb1633be8a231fa"
+            },
+            {
+              "kind": "switchtarget",
+              "target": "Dialog",
+              "titleContains": "WAV\u3092\u51FA\u529B",
+              "dialogClass": "#32770",
+              "timeoutMs": 5000,
+              "id": "15d6969c64a648538729509e5014f74b"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 13,
+                "keyName": "Return"
+              },
+              "id": "1c4104a4ab804dd8994dd5d2c4113a33"
+            }
+          ]
+        },
+        {
+          "id": "bf83ab4fa3a044e1939984032c461627",
+          "targetApplicationId": "88583c921c7448d4a073ac358862f5df",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "ccc836fb8a5e4dd0b23aa288c78fbea7"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control, Shift",
+                "virtualKey": 77,
+                "keyName": "M"
+              },
+              "id": "89c185212f514fe08d16f44c7b8ea325"
+            },
+            {
+              "kind": "click",
+              "x": 79,
+              "y": 313,
+              "anchor": "Center",
+              "button": "Left",
+              "id": "91bc2f97984e41a4ac664c9a9adc65d7"
+            },
+            {
+              "kind": "waitdialog",
+              "titleContains": "\u4FDD\u5B58\u5148\u306E\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u6307\u5B9A\u3057\u3066\u304F\u3060\u3055\u3044",
+              "dialogClass": "#32770",
+              "bringToForeground": true,
+              "timeoutMs": 4000,
+              "id": "0b8b845d5c154d05b0913321e1bdb119"
+            },
+            {
+              "kind": "switchtarget",
+              "target": "Dialog",
+              "titleContains": "\u4FDD\u5B58\u5148\u306E\u30D5\u30A9\u30EB\u30C0\u30FC\u3092\u6307\u5B9A\u3057\u3066\u304F\u3060\u3055\u3044",
+              "dialogClass": "#32770",
+              "timeoutMs": 5000,
+              "id": "d40d44c637c241689b95c2723167bc01"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 13,
+                "keyName": "Return"
+              },
+              "id": "9bf6b0cad4cf4553b51e228adf1b0c1b"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

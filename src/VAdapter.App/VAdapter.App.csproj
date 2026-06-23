@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\VAdapter.Core\VAdapter.Core.csproj" />
+    <ProjectReference Include="..\VAdapter.Automation\VAdapter.Automation.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>V-Adapter</Product>
+    <AssemblyTitle>V-Adapter</AssemblyTitle>
+    <Version>0.0.1</Version>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <InformationalVersion>0.0.1-alpha</InformationalVersion>
+    <Authors>bluemistel</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 初回起動時にシードする既定ライブラリ（標準マクロ＋対象アプリテンプレート） -->
+    <EmbeddedResource Include="Resources\default-library.json" />
+  </ItemGroup>
+
+</Project>

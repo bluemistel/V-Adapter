@@ -1,0 +1,266 @@
+<Window x:Class="VAdapter.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="V-Adapter — 合成音声マクロ" Height="560" Width="760"
+        MinHeight="460" MinWidth="640"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource B.AppBg}">
+
+    <DockPanel>
+        <!-- ════════ タイトルストリップ ════════ -->
+        <Border DockPanel.Dock="Top" Height="42" Background="{StaticResource B.Surface}"
+                BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1">
+            <DockPanel LastChildFill="False" Margin="12,0">
+                <Path DockPanel.Dock="Left" VerticalAlignment="Center" Width="19" Height="19" Stretch="Uniform"
+                      Data="{StaticResource I.Mic}" Stroke="{StaticResource B.Primary}" StrokeThickness="1.7"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                <TextBlock DockPanel.Dock="Left" Text="V-Adapter" VerticalAlignment="Center" Margin="9,0,0,0"
+                           FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
+                <TextBlock DockPanel.Dock="Left" Text="合成音声マクロ" VerticalAlignment="Center" Margin="9,1,0,0"
+                           FontSize="11" Foreground="{StaticResource B.TextMuted}"/>
+                <Border DockPanel.Dock="Left" VerticalAlignment="Center" Margin="8,1,0,0"
+                        Background="{StaticResource B.Accent}" CornerRadius="999" Padding="6,1">
+                    <TextBlock Text="v0.0.1 α" FontSize="10" FontWeight="SemiBold"
+                               Foreground="{StaticResource B.PrimaryDark}"/>
+                </Border>
+
+                <ToggleButton x:Name="PinButton" DockPanel.Dock="Right" Style="{StaticResource PinToggle}"
+                              VerticalAlignment="Center" Width="30" Height="30" Click="OnTogglePin"
+                              ToolTip="ウィンドウを常に最前面に固定します">
+                    <Path Width="15" Height="15" Stretch="Uniform" Data="{StaticResource I.Pin}"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                          StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                </ToggleButton>
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" VerticalAlignment="Center"
+                        Width="30" Height="30" Padding="0" Margin="0,0,4,0" Click="OnOpenHelp"
+                        Foreground="{StaticResource B.TextTertiary}" ToolTip="使い方・更新履歴">
+                    <Path Width="16" Height="16" Stretch="Uniform" Data="{StaticResource I.Help}"
+                          Stroke="{StaticResource B.TextTertiary}" StrokeThickness="1.7"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                </Button>
+            </DockPanel>
+        </Border>
+
+        <!-- ════════ ツールバー ════════ -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,10,12,8">
+            <Button Style="{StaticResource PrimaryButton}" Height="34" Click="OnManageTargets"
+                    ToolTip="対象アプリの登録・編集">
+                <StackPanel Orientation="Horizontal">
+                    <Path Width="15" Height="15" Stretch="Uniform" Data="{StaticResource I.Grid}"
+                          Stroke="White" StrokeThickness="1.8" Margin="0,0,7,0"/>
+                    <TextBlock Text="対象アプリ管理" VerticalAlignment="Center" Foreground="White"/>
+                </StackPanel>
+            </Button>
+            <Button Height="34" Margin="8,0,0,0" Click="OnRunMacro" ToolTip="選択中のマクロを実行">
+                <StackPanel Orientation="Horizontal">
+                    <Path Width="14" Height="14" Stretch="Uniform" Data="{StaticResource I.Play}"
+                          Fill="{StaticResource B.Primary}" Margin="0,0,6,0"/>
+                    <TextBlock Text="実行" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Border Width="1" Height="20" Background="{StaticResource B.Border}" Margin="10,0"/>
+
+            <ToggleButton x:Name="OpsToggle" Style="{StaticResource GhostToggle}" ToolTip="マクロの操作">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="操作" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <Path Width="14" Height="14" Stretch="Uniform" Data="{StaticResource I.ChevDown}"
+                          Stroke="{StaticResource B.TextSecondary}" StrokeThickness="2"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round">
+                        <Path.RenderTransform>
+                            <RotateTransform x:Name="OpsChevron" CenterX="7" CenterY="7"/>
+                        </Path.RenderTransform>
+                    </Path>
+                </StackPanel>
+            </ToggleButton>
+        </StackPanel>
+
+        <!-- ════════ 操作展開行 ════════ -->
+        <Border DockPanel.Dock="Top" Padding="12,0,12,8"
+                Visibility="{Binding IsChecked, ElementName=OpsToggle, Converter={StaticResource BoolToVis}}">
+            <WrapPanel>
+                <Button Style="{StaticResource SmallButton}" Margin="0,0,6,0" Click="OnNewMacro" ToolTip="新規マクロを作成">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Plus}"
+                              Stroke="{StaticResource B.TextSecondary}" StrokeThickness="2"
+                              StrokeStartLineCap="Round" Margin="0,0,5,0"/>
+                        <TextBlock Text="新規" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SmallButton}" Margin="0,0,6,0" Click="OnEditMacro" ToolTip="選択中のマクロを編集">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Pencil}"
+                              Stroke="{StaticResource B.TextSecondary}" StrokeThickness="1.7"
+                              StrokeStartLineCap="Round" StrokeLineJoin="Round" Margin="0,0,5,0"/>
+                        <TextBlock Text="編集" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SmallButton}" Margin="0,0,6,0" Click="OnDuplicateMacro" ToolTip="選択中のマクロを複製">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Copy}"
+                              Stroke="{StaticResource B.TextSecondary}" StrokeThickness="1.7"
+                              StrokeStartLineCap="Round" StrokeLineJoin="Round" Margin="0,0,5,0"/>
+                        <TextBlock Text="複製" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SmallDangerButton}" Margin="0,0,6,0" Click="OnDeleteMacro" ToolTip="選択中のマクロを削除">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Trash}"
+                              Stroke="{StaticResource B.Danger}" StrokeThickness="1.7"
+                              StrokeStartLineCap="Round" StrokeLineJoin="Round" Margin="0,0,5,0"/>
+                        <TextBlock Text="削除" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Border Width="1" Height="18" Background="{StaticResource B.Border}" Margin="3,0,9,0"/>
+                <Button Style="{StaticResource SmallButton}" Margin="0,0,6,0" Click="OnImport" ToolTip="マクロを読み込み">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Import}"
+                              Stroke="{StaticResource B.TextSecondary}" StrokeThickness="1.7"
+                              StrokeStartLineCap="Round" StrokeLineJoin="Round" Margin="0,0,5,0"/>
+                        <TextBlock Text="インポート" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SmallButton}" Click="OnExport" ToolTip="選択中のマクロを書き出し">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Export}"
+                              Stroke="{StaticResource B.TextSecondary}" StrokeThickness="1.7"
+                              StrokeStartLineCap="Round" StrokeLineJoin="Round" Margin="0,0,5,0"/>
+                        <TextBlock Text="エクスポート" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+        </Border>
+
+        <!-- ════════ ボディ ════════ -->
+        <Grid Margin="12,0,12,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="186"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左: マクロ一覧 + ログ -->
+            <DockPanel Grid.Column="0" Margin="0,0,10,0">
+
+                <!-- 折りたたみログ -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                    <ToggleButton x:Name="LogToggle" Style="{StaticResource ExpanderToggle}" HorizontalContentAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.ChevRight}"
+                                  Stroke="{StaticResource B.TextSecondary}" StrokeThickness="2"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  VerticalAlignment="Center" Margin="0,0,7,0">
+                                <Path.RenderTransform>
+                                    <RotateTransform x:Name="LogChevron" CenterX="6.5" CenterY="6.5"/>
+                                </Path.RenderTransform>
+                            </Path>
+                            <TextBlock Text="実行ログ" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LogCountText" Text="0 件" VerticalAlignment="Center" Margin="7,1,0,0"
+                                       FontSize="10" Foreground="{StaticResource B.TextMuted}"/>
+                        </StackPanel>
+                    </ToggleButton>
+                    <Border Margin="0,6,0,0" Height="96" CornerRadius="6" Background="{StaticResource B.HoverBg}"
+                            BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                            Visibility="{Binding IsChecked, ElementName=LogToggle, Converter={StaticResource BoolToVis}}">
+                        <TextBox x:Name="LogBox" IsReadOnly="True" Background="Transparent" BorderThickness="0"
+                                 VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Padding="10,8"
+                                 FontFamily="{StaticResource F.Mono}" FontSize="11"
+                                 Foreground="{StaticResource B.TextSecondary}"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- マクロリストカード -->
+                <Border Background="{StaticResource B.Surface}" CornerRadius="8"
+                        BorderBrush="{StaticResource B.Border}" BorderThickness="1">
+                    <DockPanel>
+                        <!-- 見出し行 -->
+                        <Border DockPanel.Dock="Top" Height="30" Background="{StaticResource B.HoverBg}"
+                                BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1"
+                                CornerRadius="8,8,0,0">
+                            <Grid Margin="8,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="56"/>
+                                    <ColumnDefinition Width="92"/>
+                                    <ColumnDefinition Width="104"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="有効" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource B.TextTertiary}"/>
+                                <TextBlock Grid.Column="1" Text="名前" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource B.TextTertiary}"/>
+                                <TextBlock Grid.Column="2" Text="種別" VerticalAlignment="Center"
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource B.TextTertiary}"/>
+                                <TextBlock Grid.Column="3" Text="ショートカット" VerticalAlignment="Center"
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource B.TextTertiary}"/>
+                                <TextBlock Grid.Column="4" Text="対象アプリ" VerticalAlignment="Center"
+                                           FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource B.TextTertiary}"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox x:Name="MacroList" Background="Transparent" BorderThickness="0"
+                                 MouseDoubleClick="OnEditMacro" Padding="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="36" Margin="8,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="34"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="56"/>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="104"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox Grid.Column="0" Style="{StaticResource ListCheckBox}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                                  Checked="OnEnabledChanged" Unchecked="OnEnabledChanged"/>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
+                                                   Margin="8,0,0,0" FontSize="13" Foreground="{StaticResource B.TextPrimary}"
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <Border Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                CornerRadius="999" Padding="7,1"
+                                                Background="{Binding Kind, Converter={StaticResource KindBadge}, ConverterParameter=bg}">
+                                            <TextBlock Text="{Binding Kind}" FontSize="10"
+                                                       Foreground="{Binding Kind, Converter={StaticResource KindBadge}, ConverterParameter=fg}"/>
+                                        </Border>
+
+                                        <TextBlock Grid.Column="3" Text="{Binding ShortcutText}" VerticalAlignment="Center"
+                                                   FontFamily="{StaticResource F.Mono}" FontSize="11"
+                                                   Foreground="{StaticResource B.TextSecondary}" TextTrimming="CharacterEllipsis"/>
+
+                                        <TextBlock Grid.Column="4" Text="{Binding TargetText}" VerticalAlignment="Center"
+                                                   FontSize="11" Foreground="{StaticResource B.TextTertiary}"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </DockPanel>
+
+            <!-- 右: 送信先レール -->
+            <Border Grid.Column="1" Background="{StaticResource B.Surface}" CornerRadius="8"
+                    BorderBrush="{StaticResource B.Border}" BorderThickness="1">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="12,11,12,8">
+                        <TextBlock Text="送信先" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
+                        <TextBlock Text="マクロの送信先を選択" FontSize="11" Foreground="{StaticResource B.TextMuted}"
+                                   Margin="0,3,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource B.BorderLight}" BorderThickness="0,1,0,0"
+                            Padding="10,8,10,10">
+                        <Button Style="{StaticResource GhostButton}" Height="30" HorizontalAlignment="Stretch"
+                                Foreground="{StaticResource B.TextTertiary}" FontWeight="Normal" FontSize="12"
+                                Content="自動判定に戻す" Click="OnClearActiveTarget"/>
+                    </Border>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,0">
+                        <StackPanel x:Name="TargetSwitcher"/>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -1,0 +1,15 @@
+<Window x:Class="VAdapter.App.Views.RegionCaptureWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="#33000088"
+        ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize"
+        Cursor="Cross"
+        MouseLeftButtonDown="OnMouseDown" MouseMove="OnMouseMove"
+        MouseLeftButtonUp="OnMouseUp" KeyDown="OnKeyDown">
+    <Canvas x:Name="RootCanvas">
+        <TextBlock Canvas.Left="20" Canvas.Top="20" Foreground="White" FontSize="16"
+                   Text="OCR で監視する範囲をドラッグで選択してください（Esc でキャンセル）"/>
+        <Rectangle x:Name="SelectionRect" Stroke="#FFFFCC00" StrokeThickness="2"
+                   Fill="#22FFCC00" Visibility="Collapsed"/>
+    </Canvas>
+</Window>

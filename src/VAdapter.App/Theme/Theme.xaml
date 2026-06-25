@@ -282,7 +282,8 @@
                                   Data="{StaticResource I.Check}" Stroke="{TemplateBinding Foreground}"
                                   StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                                   StrokeLineJoin="Round" Opacity="0"/>
-                            <ContentPresenter VerticalAlignment="Center"/>
+                            <TextBlock x:Name="txt" Text="{TemplateBinding Content}" VerticalAlignment="Center"
+                                       Foreground="{StaticResource B.TextPrimary}" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -293,6 +294,7 @@
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Primary}"/>
                             <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource B.Primary}"/>
                             <Setter Property="Foreground" Value="White"/>
+                            <Setter TargetName="txt" Property="Foreground" Value="White"/>
                             <Setter TargetName="chk" Property="Opacity" Value="1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>

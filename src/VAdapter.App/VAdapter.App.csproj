@@ -15,10 +15,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>V-Adapter</Product>
     <AssemblyTitle>V-Adapter</AssemblyTitle>
-    <Version>0.0.1</Version>
-    <AssemblyVersion>0.0.1.0</AssemblyVersion>
-    <FileVersion>0.0.1.0</FileVersion>
-    <InformationalVersion>0.0.1-alpha</InformationalVersion>
+    <Version>0.0.2</Version>
+    <AssemblyVersion>0.0.2.0</AssemblyVersion>
+    <FileVersion>0.0.2.0</FileVersion>
+    <InformationalVersion>0.0.2-alpha</InformationalVersion>
     <Authors>bluemistel</Authors>
   </PropertyGroup>
 

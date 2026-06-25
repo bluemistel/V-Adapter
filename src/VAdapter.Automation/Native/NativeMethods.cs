@@ -220,4 +220,48 @@ internal static class NativeMethods
     public const uint MOD_SHIFT = 0x0004;
     public const uint MOD_WIN = 0x0008;
     public const uint MOD_NOREPEAT = 0x4000;
+
+    // --- ごちゃまぜドロップス 外部連携API（ファイルマッピング / ミューテックス / WM_COPYDATA） ---
+
+    public const uint WM_COPYDATA = 0x004A;
+
+    public const uint FILE_MAP_READ = 0x0004;
+    public const uint SYNCHRONIZE = 0x00100000;
+
+    public const uint WAIT_OBJECT_0 = 0x00000000;
+    public const uint WAIT_ABANDONED = 0x00000080;
+    public const uint WAIT_TIMEOUT = 0x00000102;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess,
+        uint dwFileOffsetHigh, uint dwFileOffsetLow, UIntPtr dwNumberOfBytesToMap);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr OpenMutex(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool ReleaseMutex(IntPtr hMutex);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, ref COPYDATASTRUCT lParam);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct COPYDATASTRUCT
+    {
+        public IntPtr dwData;
+        public int cbData;
+        public IntPtr lpData;
+    }
 }

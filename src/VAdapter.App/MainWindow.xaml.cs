@@ -35,7 +35,7 @@ public partial class MainWindow : Window
         LogToggle.Unchecked += (_, _) => LogChevron.Angle = 0;
 
         Loaded += OnLoaded;
-        Closed += (_, _) => _state.Hotkeys.Dispose();
+        Closed += (_, _) => _state.Dispose();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -45,7 +45,41 @@ public partial class MainWindow : Window
         var failures = _state.Hotkeys.RegisterAll(_state.Library.Macros);
         if (failures > 0)
             Log($"注意: {failures} 件のショートカットを登録できませんでした（他アプリと競合の可能性）。");
+
+        // 連携モードを適用（AviUtl/AviUtl2 のときは監視開始）。
+        _state.DropService.Log += OnDropLog;
+        _state.ApplyIntegration();
+        UpdateModeLabel();
+
         Log("準備完了。マクロを選択して実行、またはショートカットで起動できます。");
+    }
+
+    private void OnDropLog(string message) =>
+        Dispatcher.BeginInvoke(new Action(() => Log($"[連携] {message}")));
+
+    private void OnOpenIntegration(object sender, RoutedEventArgs e)
+    {
+        var window = new Views.IntegrationSettingsWindow(_state) { Owner = this };
+        if (window.ShowDialog() == true)
+        {
+            UpdateModeLabel();
+            Log("連携設定を更新しました。");
+        }
+        else
+        {
+            // キャンセル時もテスト投げで一時変更した監視状態を確定設定へ戻す。
+            _state.ApplyIntegration();
+        }
+    }
+
+    private void UpdateModeLabel()
+    {
+        ModeLabel.Text = _state.Integration.ActiveMode switch
+        {
+            VAdapter.Core.Models.IntegrationMode.AviUtl => "連携: AviUtl",
+            VAdapter.Core.Models.IntegrationMode.AviUtl2 => "連携: AviUtl2",
+            _ => "連携: マクロ動作ベース",
+        };
     }
 
     // --- 一覧の更新 ---

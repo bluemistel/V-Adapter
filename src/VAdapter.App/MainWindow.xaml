@@ -20,9 +20,11 @@
                            FontSize="11" Foreground="{StaticResource B.TextMuted}"/>
                 <Border DockPanel.Dock="Left" VerticalAlignment="Center" Margin="8,1,0,0"
                         Background="{StaticResource B.Accent}" CornerRadius="999" Padding="6,1">
-                    <TextBlock Text="v0.0.1 α" FontSize="10" FontWeight="SemiBold"
+                    <TextBlock Text="v0.0.2 α" FontSize="10" FontWeight="SemiBold"
                                Foreground="{StaticResource B.PrimaryDark}"/>
                 </Border>
+                <TextBlock x:Name="ModeLabel" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="10,1,0,0"
+                           FontSize="11" Foreground="{StaticResource B.TextMuted}"/>
 
                 <ToggleButton x:Name="PinButton" DockPanel.Dock="Right" Style="{StaticResource PinToggle}"
                               VerticalAlignment="Center" Width="30" Height="30" Click="OnTogglePin"
@@ -57,6 +59,9 @@
                           Fill="{StaticResource B.Primary}" Margin="0,0,6,0"/>
                     <TextBlock Text="実行" VerticalAlignment="Center"/>
                 </StackPanel>
+            </Button>
+            <Button Height="34" Margin="8,0,0,0" Click="OnOpenIntegration" ToolTip="AviUtl/AviUtl2 連携の設定">
+                <TextBlock Text="連携設定" VerticalAlignment="Center"/>
             </Button>
 
             <Border Width="1" Height="20" Background="{StaticResource B.Border}" Margin="10,0"/>

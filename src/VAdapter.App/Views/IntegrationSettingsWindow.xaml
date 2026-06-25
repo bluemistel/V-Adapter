@@ -1,0 +1,154 @@
+<Window x:Class="VAdapter.App.Views.IntegrationSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="連携設定 — 動画編集ソフト" Height="720" Width="680" MinHeight="600" MinWidth="620"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="14">
+        <!-- 下部ボタン -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Style="{StaticResource PrimaryButton}" Width="90" Margin="0,0,8,0" Click="OnOk">
+                <TextBlock Text="OK" Foreground="White"/>
+            </Button>
+            <Button Width="90" Content="キャンセル" IsCancel="True"/>
+        </StackPanel>
+
+        <!-- 連携環境セレクタ -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource B.Surface}" CornerRadius="8"
+                BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="連携環境" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
+                <TextBlock Text="音声・字幕の投げ込み先を選択します。マクロ実行はどのモードでも動作します。"
+                           FontSize="11" Foreground="{StaticResource B.TextMuted}" Margin="0,3,0,8" TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="ModeMacro" Content="マクロ動作ベース（YMM4 等）" Margin="0,0,18,0"
+                                 GroupName="Mode" Checked="OnModeChecked"/>
+                    <RadioButton x:Name="ModeAviUtl" Content="AviUtl + PSDToolKit" Margin="0,0,18,0"
+                                 GroupName="Mode" Checked="OnModeChecked"/>
+                    <RadioButton x:Name="ModeAviUtl2" Content="AviUtl2 + PSDToolKit2"
+                                 GroupName="Mode" Checked="OnModeChecked"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- マクロ動作ベースの説明 -->
+        <Border x:Name="MacroOnlyPanel" DockPanel.Dock="Top" Background="{StaticResource B.HoverBg}"
+                CornerRadius="8" BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="16"
+                Visibility="Collapsed">
+            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}"
+                       Text="マクロ動作ベースでは、V-Adapter はマクロ実行のみを行い、ファイルの投げ込み（監視）は行いません。動画編集ソフト（YMM4 のカスタムボイス等）が音声・字幕を取り込みます。AviUtl / AviUtl2 へ自動で投げ込むには、上のモードを切り替えてください。"/>
+        </Border>
+
+        <!-- AviUtl / AviUtl2 設定 -->
+        <Grid x:Name="AviutlPanel" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*" MinHeight="170"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 状態 -->
+            <Border Grid.Row="0" Background="{StaticResource B.Surface}" CornerRadius="8"
+                    BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="12,10" Margin="0,0,0,10">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="状態更新" Width="90" Click="OnRefreshStatus"/>
+                    <StackPanel>
+                        <TextBlock x:Name="StatusGcmz" Text="ごちゃまぜドロップス: 未確認" FontSize="12"
+                                   Foreground="{StaticResource B.TextSecondary}"/>
+                        <TextBlock x:Name="StatusProject" Text="プロジェクト: 未確認" FontSize="12"
+                                   Foreground="{StaticResource B.TextTertiary}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- フォルダ + 数値設定 -->
+            <Grid Grid.Row="1" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="220"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 監視フォルダ -->
+                <Border Grid.Column="0" Background="{StaticResource B.Surface}" CornerRadius="8"
+                        BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="10" Margin="0,0,10,0">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="監視フォルダ" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
+                            <CheckBox x:Name="IncludeSubCheck" Content="サブフォルダも含む" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Button Content="追加…" Width="70" Margin="0,0,6,0" Click="OnAddFolder"/>
+                            <Button Content="削除" Width="60" Click="OnRemoveFolder"/>
+                        </StackPanel>
+                        <ListBox x:Name="FolderList" Height="84" BorderBrush="{StaticResource B.Border}" BorderThickness="1">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="4,2" FontSize="12" Text="{Binding Display, Mode=OneWay}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+
+                <!-- 数値設定 -->
+                <Border Grid.Column="1" Background="{StaticResource B.Surface}" CornerRadius="8"
+                        BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="10">
+                    <StackPanel>
+                        <TextBlock Text="既定レイヤー" FontSize="12" Margin="0,0,0,2"/>
+                        <TextBox x:Name="DefaultLayerBox" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="AdvanceToItemEndCheck" Content="投入後シークをアイテム終端へ"
+                                  FontSize="12" Margin="0,0,0,8"
+                                  Checked="OnAdvanceToggled" Unchecked="OnAdvanceToggled"/>
+                        <TextBlock Text="frameAdvance（手動・上をOFF時）" FontSize="12" Margin="0,0,0,2"/>
+                        <TextBox x:Name="FrameAdvanceBox" Margin="0,0,0,8"/>
+                        <TextBlock Text="安定待ち (ms)" FontSize="12" Margin="0,0,0,2"/>
+                        <TextBox x:Name="StableWaitBox" Margin="0,0,0,8"/>
+                        <StackPanel x:Name="MarginPanel">
+                            <TextBlock Text="margin（AviUtl2のみ）" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBox x:Name="MarginBox"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 話者ルール -->
+            <Border Grid.Row="2" MinHeight="150" Background="{StaticResource B.Surface}" CornerRadius="8"
+                    BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
+                        <TextBlock Text="話者ルール（ファイル名→レイヤー）" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="行を追加" Width="80" Margin="0,0,6,0" Click="OnAddRule"/>
+                            <Button Content="削除" Width="60" Click="OnRemoveRule"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" FontSize="11" Foreground="{StaticResource B.TextMuted}"
+                               TextWrapping="Wrap"
+                               Text="「行を追加」で _話者_ / -話者- を抽出する既定パターンが入ります。話者名を空にするとパターンの( )内を話者名として抽出します。特定話者を別レイヤーにしたい場合は、その話者用の行を上に追加してください（上から順に評価）。"/>
+                    <DataGrid x:Name="RulesGrid" AutoGenerateColumns="False" CanUserAddRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="26"
+                              Background="Transparent" BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="有効" Binding="{Binding Enabled}" Width="44"/>
+                            <DataGridTextColumn Header="ファイル名パターン（正規表現）" Binding="{Binding NamePattern}" Width="*"/>
+                            <DataGridTextColumn Header="話者名" Binding="{Binding SpeakerName}" Width="120"/>
+                            <DataGridTextColumn Header="レイヤー" Binding="{Binding Layer}" Width="64"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <!-- ログ + テスト -->
+            <Border Grid.Row="3" Background="{StaticResource B.Surface}" CornerRadius="8"
+                    BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="10">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <TextBlock Text="ログ" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button HorizontalAlignment="Right" Content="今すぐ投げる（テスト）…" Width="170" Click="OnTestDrop"/>
+                    </DockPanel>
+                    <TextBox x:Name="LogBox" Height="80" IsReadOnly="True" Background="{StaticResource B.HoverBg}"
+                             VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Padding="8,6"
+                             FontFamily="{StaticResource F.Mono}" FontSize="11" Foreground="{StaticResource B.TextSecondary}"/>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

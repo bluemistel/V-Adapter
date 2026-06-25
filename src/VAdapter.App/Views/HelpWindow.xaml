@@ -1,73 +1,191 @@
 <Window x:Class="VAdapter.App.Views.HelpWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="V-Adapter — ヘルプ" Height="520" Width="560"
+        Title="V-Adapter — 使い方" Height="640" Width="820" MinHeight="520" MinWidth="700"
         WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="16">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,14">
-            <Path Width="22" Height="22" Stretch="Uniform" Data="{StaticResource I.Mic}"
-                  Stroke="{StaticResource B.Primary}" StrokeThickness="1.7"
-                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-            <TextBlock Text="V-Adapter" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Margin="9,0,0,0"/>
-            <Border VerticalAlignment="Center" Margin="8,2,0,0" Background="{StaticResource B.Accent}"
-                    CornerRadius="999" Padding="7,1">
-                <TextBlock Text="v0.0.1 α" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
+    <DockPanel Margin="0">
+        <!-- 下部 -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource B.Surface}"
+                BorderBrush="{StaticResource B.Border}" BorderThickness="0,1,0,0" Padding="12,10">
+            <Button Style="{StaticResource PrimaryButton}" Width="100" HorizontalAlignment="Right" IsCancel="True">
+                <TextBlock Text="閉じる" Foreground="White"/>
+            </Button>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左: メニュー -->
+            <Border Grid.Column="0" Background="{StaticResource B.HoverBg}"
+                    BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="14,14,12,12">
+                        <Path Width="20" Height="20" Stretch="Uniform" Data="{StaticResource I.Mic}"
+                              Stroke="{StaticResource B.Primary}" StrokeThickness="1.7"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                        <TextBlock Text="V-Adapter" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        <Border VerticalAlignment="Center" Margin="6,2,0,0" Background="{StaticResource B.Accent}"
+                                CornerRadius="999" Padding="6,1">
+                            <TextBlock Text="v0.0.2 α" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
+                        </Border>
+                    </StackPanel>
+                    <ListBox x:Name="MenuList" Background="Transparent" BorderThickness="0" Margin="6,0,6,6"
+                             SelectionChanged="OnMenuChanged">
+                        <ListBoxItem Content="使い方（基本）" Padding="10,8"/>
+                        <ListBoxItem Content="AviUtl・AviUtl2 連携" Padding="10,8"/>
+                        <ListBoxItem Content="更新履歴" Padding="10,8"/>
+                        <ListBoxItem Content="不具合報告" Padding="10,8"/>
+                        <ListBoxItem Content="ライセンス・免責" Padding="10,8"/>
+                    </ListBox>
+                </DockPanel>
             </Border>
-        </StackPanel>
 
-        <Button DockPanel.Dock="Bottom" Style="{StaticResource PrimaryButton}"
-                HorizontalAlignment="Right" Width="100" Margin="0,14,0,0" IsCancel="True">
-            <TextBlock Text="閉じる" Foreground="White"/>
-        </Button>
-
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <!-- 使い方 -->
-                <Expander IsExpanded="True" Margin="0,0,0,10" Foreground="{StaticResource B.TextPrimary}">
-                    <Expander.Header>
-                        <TextBlock Text="使い方" FontSize="14" FontWeight="SemiBold"/>
-                    </Expander.Header>
-                    <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}"
-                            BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
-                        <StackPanel>
-                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">1. 対象アプリを登録</Run><LineBreak/>
-                                「対象アプリ管理」を開き、合成音声ソフトを登録します。「実行中ウィンドウから取得」で起動中のアプリを選ぶと簡単です。座標モード（相対／絶対）を選べます。<LineBreak/><LineBreak/>
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">2. マクロを実行</Run><LineBreak/>
-                                一覧でマクロを選んで「実行」、または設定したショートカットキーで起動します。標準マクロ：音声の再生（Ctrl+Space）／音声の保存（Ctrl+E）。<LineBreak/><LineBreak/>
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">3. 送信先を固定（任意）</Run><LineBreak/>
-                                複数の合成音声ソフトを同時起動しているときは、右の「送信先」で送信先アプリを固定できます。未選択時は前面のアプリを自動判定します。<LineBreak/><LineBreak/>
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">4. マクロを編集</Run><LineBreak/>
-                                「操作」→「編集」でマクロを開き、対象アプリごとのスクリプト（命令列）を作成します。命令：待機／クリック（基準位置でサイズ追従）／キー送信／ウィンドウ・ダイアログ・テキスト・アプリ切替の各待ち／操作対象の切り替え。<LineBreak/><LineBreak/>
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">5. テンプレートの活用</Run><LineBreak/>
-                                A.I.VOICE2／CeVIO AI／VOICEPEAK／VoiSona Talk／VOICEVOX は対象アプリのテンプレートとして同梱しています。お使いの環境で「対象アプリ管理」から登録するとマクロが利用できます。
-                            </TextBlock>
-                            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"
-                                       Text="補足: 日本語OCR（テキスト表示待ち）には Windows の OCR 言語機能（日本語）が必要です。管理者権限で動くアプリを操作する場合は本アプリも管理者として実行してください。"/>
-                        </StackPanel>
-                    </Border>
-                </Expander>
-
-                <!-- 更新履歴 -->
-                <Expander IsExpanded="False" Foreground="{StaticResource B.TextPrimary}">
-                    <Expander.Header>
-                        <TextBlock Text="更新履歴" FontSize="14" FontWeight="SemiBold"/>
-                    </Expander.Header>
-                    <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}"
-                            BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,8,0,0">
-                        <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
-                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.1 (α) — 初回リリース</Run><LineBreak/>
-                            ・標準マクロ（音声の再生 / 音声の保存）を同梱<LineBreak/>
-                            ・1マクロに対象アプリごとのスクリプトを保持／前面アプリ自動判定・送信先固定<LineBreak/>
-                            ・命令：待機・クリック（アンカー基準でサイズ追従）・キー送信（スキャンコード送信）・ウィンドウ／ダイアログ／テキスト（OCR）／アプリ切替の各待ち・操作対象の切り替え<LineBreak/>
-                            ・対象アプリ検出をプロセス名優先＋クラス正規化（GUID/JUCE/WinForms 揺れに対応）で安定化<LineBreak/>
-                            ・座標・領域・ウィンドウクラスをクリック取得、ドラッグ範囲選択<LineBreak/>
-                            ・マクロのインポート／エクスポート（.vamacro）<LineBreak/>
-                            ・デザインシステムに沿った UI へ刷新／最前面ピン留め
+            <!-- 右: コンテンツ -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="20,18">
+                <Grid>
+                    <!-- 使い方（基本） -->
+                    <StackPanel x:Name="SecBasic">
+                        <TextBlock Text="使い方（基本）" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" LineHeight="23" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">1. 対象アプリを登録</Run><LineBreak/>
+                            「対象アプリ管理」を開き、合成音声ソフトを登録します。「実行中ウィンドウから取得」で起動中のアプリを選ぶと簡単です。座標モード（相対／絶対）を選べます。<LineBreak/><LineBreak/>
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">2. マクロを実行</Run><LineBreak/>
+                            一覧でマクロを選んで「実行」、または設定したショートカットで起動します。標準マクロ：音声の再生（Ctrl+Space）／音声の保存（Ctrl+E）。<LineBreak/><LineBreak/>
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">3. 送信先を固定（任意）</Run><LineBreak/>
+                            複数の合成音声ソフトを同時起動しているときは、右の「送信先」で送信先アプリを固定できます。未選択時は前面のアプリを自動判定します。<LineBreak/><LineBreak/>
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">4. マクロを編集</Run><LineBreak/>
+                            「操作」→「編集」で、対象アプリごとのスクリプト（命令列）を作成します。命令：待機／クリック（基準位置でサイズ追従）／キー送信／ウィンドウ・ダイアログ・テキスト・アプリ切替の各待ち／操作対象の切り替え。<LineBreak/><LineBreak/>
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">5. テンプレートの活用</Run><LineBreak/>
+                            A.I.VOICE2／CeVIO AI／VOICEPEAK／VoiSona Talk／VOICEVOX を対象アプリのテンプレートとして同梱しています。お使いの環境で「対象アプリ管理」から登録するとマクロが利用できます。
                         </TextBlock>
-                    </Border>
-                </Expander>
-            </StackPanel>
-        </ScrollViewer>
+                        <TextBlock Margin="0,12,0,0" FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"
+                                   Text="補足: 日本語OCR（テキスト表示待ち）には Windows の OCR 言語機能（日本語）が必要です。管理者権限で動くアプリを操作する場合は本アプリも管理者として実行してください。"/>
+                    </StackPanel>
+
+                    <!-- AviUtl・AviUtl2 連携 -->
+                    <StackPanel x:Name="SecAviutl" Visibility="Collapsed">
+                        <TextBlock Text="AviUtl・AviUtl2 連携" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                        <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,12"
+                                   Text="合成音声ソフトが書き出した「同名の wav + txt」を、ごちゃまぜドロップス（GCMZDrops / AviUtl2 は GCMZDrops2）の外部連携API経由で AviUtl / AviUtl2 のタイムラインへ自動投入します。字幕・口パク等の生成は PSDToolKit / PSDToolKit2 が担います。設定は失敗しやすいので、下記の順に確認してください。"/>
+
+                        <!-- A 事前準備 -->
+                        <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">A. 事前準備（編集ソフト側）</Run><LineBreak/>
+                                ・AviUtl + 拡張編集 + ごちゃまぜドロップス + PSDToolKit を導入・起動<LineBreak/>
+                                ・AviUtl2 の場合は AviUtl2 + GCMZDrops2 + PSDToolKit2<LineBreak/>
+                                ・編集ソフトで<Run FontWeight="SemiBold">プロジェクトを開く</Run>（解像度設定。未読込だと投入できません）
+                            </TextBlock>
+                        </Border>
+
+                        <!-- B PSDToolKit 発動条件 -->
+                        <Border Background="{StaticResource B.Accent}" BorderBrush="{StaticResource B.Primary}" BorderThickness="1"
+                                CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}">B. PSDToolKit 環境設定 ＞ 発動条件（最重要）</Run><LineBreak/>
+                                「*.wav ファイルドロップ拡張」→「発動条件」で<LineBreak/>
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">☑「同じ名前の *.wav と *.txt を一緒にドロップした時」</Run> を有効にします。<LineBreak/>
+                                ・V-Adapter は wav と txt を一緒に投げるため、この条件で口パク準備・字幕準備等が生成されます。<LineBreak/>
+                                ・「Shift を押しながら…」「*.exo をドロップ…」は本アプリの投入方式では発動しません。<LineBreak/>
+                                ・「字幕準備」の<Run FontWeight="SemiBold">文字コード</Run>は txt の実際のエンコーディングに合わせます（字幕が文字化けする場合は UTF-8 / Shift_JIS を切替）。<LineBreak/>
+                                ・口パク準備／多目的スライダー／字幕準備は、使うものを有効にします。
+                            </TextBlock>
+                        </Border>
+
+                        <!-- C 連携設定 -->
+                        <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">C. V-Adapter 連携設定</Run><LineBreak/>
+                                ・メイン画面の「連携設定」を開き、<Run FontWeight="SemiBold">連携環境</Run>を選択（マクロ動作ベース／AviUtl+PSDToolKit／AviUtl2+PSDToolKit2）。設定は環境ごとに独立です。<LineBreak/>
+                                ・「<Run FontWeight="SemiBold">状態更新</Run>」で「接続OK」「プロジェクト読込済み」を確認（未検出＝編集ソフト/プラグイン未起動、未読込＝プロジェクトを開く）。<LineBreak/>
+                                ・「<Run FontWeight="SemiBold">監視フォルダ</Run>」に合成音声ソフトの書き出し先を追加。<LineBreak/>
+                                ・<Run FontWeight="SemiBold">既定レイヤー</Run>、<Run FontWeight="SemiBold">投入後シークをアイテム終端へ</Run>（既定ON＝音声長ぶんカーソルが進む）、安定待ち(ms)、margin（AviUtl2のみ）。<LineBreak/>
+                                ・<Run FontWeight="SemiBold">話者ルール</Run>：「行を追加」で「_話者_ / -話者-」を抽出する既定パターンが入ります。話者名を空にすると ( ) 内を話者名として抽出。特定話者を別レイヤーにしたい場合は、その話者用の行を上に追加（上から順に評価）。
+                            </TextBlock>
+                        </Border>
+
+                        <!-- D 手順 / E トラブルシュート -->
+                        <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                CornerRadius="6" Padding="14">
+                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">D. 動作確認の手順</Run><LineBreak/>
+                                1. 「状態更新」で接続を確認 → 2. 「今すぐ投げる（テスト）」で wav を選び疎通確認 → 3. 監視フォルダを保存し、書き出し（または保存マクロ）で自動投入を確認。<LineBreak/><LineBreak/>
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">E. うまくいかないとき</Run><LineBreak/>
+                                ・「未検出」→ 編集ソフトとプラグインの起動／「未読込」→ プロジェクトを開く<LineBreak/>
+                                ・字幕が文字化け → 文字コード設定／字幕が出ない → 発動条件②と、同フォルダに同名 txt があるか<LineBreak/>
+                                ・監視が反応しない → フォルダのパス／OKで保存したか／書き出し先が監視フォルダか<LineBreak/>
+                                ・<Run FontWeight="SemiBold">かんしくん併用の注意</Run>：同じフォルダを両方が処理すると二重投入になります。V-Adapter 単体で使う場合はかんしくんを停止してください。<LineBreak/>
+                                ・シーク位置がアイテム終端とずれる → PSDToolKit の開始/終了マージンを 0 にする（または手動 frameAdvance を使用）
+                            </TextBlock>
+                        </Border>
+
+                        <TextBlock Margin="0,12,0,0" FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"
+                                   Text="ごちゃまぜドロップス / GCMZDrops2 は第三者製プラグインです。利用にあたっては「ライセンス・免責」の内容に同意してください。"/>
+                    </StackPanel>
+
+                    <!-- 更新履歴 -->
+                    <StackPanel x:Name="SecChangelog" Visibility="Collapsed">
+                        <TextBlock Text="更新履歴" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.2 (α)</Run><LineBreak/>
+                            ・AviUtl / AviUtl2 への音声・字幕 投げ込み連携を追加（ごちゃまぜドロップス外部連携API）<LineBreak/>
+                            ・連携環境を3種から切替（マクロ動作ベース / AviUtl+PSDToolKit / AviUtl2+PSDToolKit2）。環境ごとに独立設定<LineBreak/>
+                            ・wav+txt 監視（安定化・二重防止）→ 話者ルールでレイヤー解決 → 投入。wav と txt を一緒に投入<LineBreak/>
+                            ・投入後シークをアイテム終端へ自動移動（音声長×fps）<LineBreak/>
+                            ・話者抽出の既定正規表現（_話者_ / -話者-）<LineBreak/>
+                            ・「使い方」を2ペイン化し AviUtl・AviUtl2 連携手順を追加<LineBreak/><LineBreak/>
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.1 (α)</Run><LineBreak/>
+                            ・初回リリース。標準マクロ、対象アプリ管理、各種命令、送信先切替、デザイン刷新 等
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- 不具合報告 -->
+                    <StackPanel x:Name="SecReport" Visibility="Collapsed">
+                        <TextBlock Text="不具合報告" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" LineHeight="23" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,14">
+                            不具合・要望は、下記の報告フォームからお寄せください。<LineBreak/>
+                            再現手順・お使いの環境（合成音声ソフト、AviUtl / AviUtl2 のバージョン等）・発生時のログを添えていただけると助かります。
+                        </TextBlock>
+                        <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="OnOpenReportForm">
+                            <TextBlock Text="不具合報告フォームを開く（ブラウザ）" Foreground="White"/>
+                        </Button>
+                        <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                CornerRadius="6" Padding="10" Margin="0,12,0,0">
+                            <TextBlock x:Name="ReportUrlText" FontFamily="{StaticResource F.Mono}" FontSize="11"
+                                       Foreground="{StaticResource B.TextTertiary}" TextWrapping="Wrap"
+                                       Text="https://ionian-gallimimus-e47.notion.site/32b8c5bf8aa481978f37e470a25e1e01"/>
+                        </Border>
+                        <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"
+                                   Text="ボタンが開かない場合は、上の URL をブラウザのアドレス欄に貼り付けてアクセスしてください。"/>
+                    </StackPanel>
+
+                    <!-- ライセンス・免責 -->
+                    <StackPanel x:Name="SecLicense" Visibility="Collapsed">
+                        <TextBlock Text="ライセンス・免責" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,12">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">V-Adapter について</Run><LineBreak/>
+                            本ソフトウェアは MIT ライセンスで提供される<Run FontWeight="SemiBold">非公式・無保証</Run>のツールです。本ソフトウェアを使用したこと及び使用しなかったことによるいかなる損害についても、作者は責任を負いません。これに同意できない場合は使用しないでください。<LineBreak/>
+                            合成音声ソフト・動画編集ソフト・各プラグインの利用規約・ライセンスは、各配布元の定めに従ってください。
+                        </TextBlock>
+                        <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                CornerRadius="6" Padding="14">
+                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">連携先プラグイン（ごちゃまぜドロップス / GCMZDrops2）について</Run><LineBreak/>
+                                なお、現在このプラグインは正式リリースではありません。<LineBreak/>
+                                新しいバージョンが公開されている場合は速やかに新バージョンへ移行してください。<LineBreak/>
+                                GCMZDrops は無保証で提供されます。<LineBreak/>
+                                GCMZDrops を使用したこと及び使用しなかったことによるいかなる損害について、開発者は責任を負いません。<LineBreak/>
+                                これに同意できない場合、あなたは GCMZDrops を使用することができません。
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
     </DockPanel>
 </Window>

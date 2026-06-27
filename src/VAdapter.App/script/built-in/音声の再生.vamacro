@@ -1,0 +1,221 @@
+{
+  "format": "vadapter.macro-bundle",
+  "version": 1,
+  "targets": [
+    {
+      "id": "34f435a6eda84498837599286e9a3d32",
+      "name": "CeVIO AI",
+      "processName": "CeVIO AI",
+      "windowTitlePattern": "CeVIO AI",
+      "titleIsRegex": false,
+      "windowClass": "HwndWrapper[CeVIO AI.exe;;77175eec-3105-4e25-b801-4c4c74749f50]",
+      "executablePath": "C:\\Program Files\\CeVIO\\CeVIO AI\\CeVIO AI.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "88583c921c7448d4a073ac358862f5df",
+      "name": "VOICEPEAK",
+      "processName": "voicepeak",
+      "windowTitlePattern": "VOICEPEAK",
+      "titleIsRegex": false,
+      "windowClass": "JUCE_19ef2440e4c",
+      "executablePath": "C:\\Program Files\\VOICEPEAK\\voicepeak.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "23340271f61a4a528ee888f8a59dd318",
+      "name": "VoiSona Talk",
+      "processName": "VoiSona Talk",
+      "windowTitlePattern": "VoiSona Talk Editor",
+      "titleIsRegex": false,
+      "windowClass": "JUCE_19ef2762b5c",
+      "executablePath": "C:\\Program Files\\Techno-Speech\\VoiSona Talk\\VoiSona Talk.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "a2ff505e5764430ab964d575066626ad",
+      "name": "A.I.VOICE2",
+      "processName": "aivoice",
+      "windowTitlePattern": "A.I.VOICE2 Editor",
+      "titleIsRegex": false,
+      "windowClass": "FLUTTER_RUNNER_WIN32_WINDOW",
+      "executablePath": "C:\\Program Files\\AI\\AIVoice2\\AIVoice2Editor\\aivoice.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "d9f748a10ef94f068a5c6069ccae13a1",
+      "name": "VOICEVOX",
+      "processName": "VOICEVOX",
+      "windowTitlePattern": "VOICEVOX",
+      "titleIsRegex": false,
+      "windowClass": "Chrome_WidgetWin_1",
+      "coordinateMode": "Relative"
+    }
+  ],
+  "macros": [
+    {
+      "id": "d02f83fb8acc4ff9b1baac11592b172f",
+      "name": "音声の再生",
+      "isBuiltIn": true,
+      "isEnabled": true,
+      "shortcut": {
+        "modifiers": "Control",
+        "virtualKey": 81,
+        "keyName": "Q"
+      },
+      "scripts": [
+        {
+          "id": "47a1e3ac3dd24d52b5fa532f5b64148b",
+          "targetApplicationId": "34f435a6eda84498837599286e9a3d32",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "e358c5bfd1724e3cb5bd0b1a63331204"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 200,
+              "id": "d9ae7b9ad9b3488c938cf7d1497aebc9"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Shift",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "ce363be32f63402ca2b3ab2f505a9174"
+            }
+          ]
+        },
+        {
+          "id": "1178f44c074641508f1550955bac2b32",
+          "targetApplicationId": "88583c921c7448d4a073ac358862f5df",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "8870829dc44e45a9abeee8ce7b73a207"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 750,
+              "id": "3c7c1901a4a0448b871d34fa86adf50d"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 9,
+                "keyName": "Tab"
+              },
+              "id": "3fcdbe92e76d4dee813e70f695a7d3c1"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "2e434af3ba914c238f01e7b043303c76"
+            }
+          ]
+        },
+        {
+          "id": "49c038d7ffb14ad2b87b662e7bc0e7f4",
+          "targetApplicationId": "23340271f61a4a528ee888f8a59dd318",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "e2deaee7475c4611a2e68bd2ede3935e"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "b18ceae4f29144398888dbd22393af6d"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Shift",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "703a37bff81f4c81a746c8a91f8907c0"
+            }
+          ]
+        },
+        {
+          "id": "eb0c11a1db0f4d48a1677d1640259715",
+          "targetApplicationId": "a2ff505e5764430ab964d575066626ad",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "83143bce59b04610941b038d13e48374"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "5046e20b14424e0d8eda6a26fda67551"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 116,
+                "keyName": "F5"
+              },
+              "id": "9e8ddddc0da64617bbaa25c838452322"
+            }
+          ]
+        },
+        {
+          "id": "5159d7c14ff142df9b55836aa5dfdb0c",
+          "targetApplicationId": "d9f748a10ef94f068a5c6069ccae13a1",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "de8bf73955f0476781246dff74afe388"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "e20fa58c0bd543bb96d5b416a882fd5b"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 9,
+                "keyName": "Tab"
+              },
+              "id": "30759aa18b9e4422807bbd6bb4b04b7a"
+            },
+            {
+              "kind": "click",
+              "x": 543,
+              "y": 51,
+              "anchor": "TopLeft",
+              "button": "Left",
+              "id": "22f9acdce988453b82da6ddc72dd1690"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "None",
+                "virtualKey": 32,
+                "keyName": "Space"
+              },
+              "id": "75cf8021bc254c8ea41d1c4d6f698734"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

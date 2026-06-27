@@ -11,6 +11,9 @@ public enum IntegrationMode
 
     /// <summary>AviUtl2 + PSDToolKit2（GCMZDrops2, dwData=2）。</summary>
     AviUtl2 = 2,
+
+    /// <summary>外部アダプタ（コマンド実行）。payload.json を中立契約で外部コマンドへ渡す。</summary>
+    External = 3,
 }
 
 /// <summary>
@@ -29,17 +32,37 @@ public sealed class IntegrationSettings
     /// <summary>AviUtl2 環境の設定。</summary>
     public AviutlDropConfig AviUtl2 { get; set; } = new();
 
-    /// <summary>指定モードに対応する投げ込み設定を返す（MacroOnly は null）。</summary>
+    /// <summary>外部アダプタ（コマンド）環境の設定。</summary>
+    public ExternalAdapterConfig External { get; set; } = new();
+
+    /// <summary>
+    /// マクロ動作ベース環境で起動する動画編集ソフトの実行ファイル（ランチャー用。YMM4 等）。
+    /// 他モードの編集ソフトは各 <see cref="AviutlDropConfig.EditorPath"/> に保持する。
+    /// </summary>
+    public string? MacroEditorPath { get; set; }
+
+    /// <summary>指定モードで起動する動画編集ソフトの実行ファイルパスを返す（未登録は null）。</summary>
+    public string? EditorPathFor(IntegrationMode mode) => mode switch
+    {
+        IntegrationMode.MacroOnly => MacroEditorPath,
+        _ => ConfigFor(mode)?.EditorPath,
+    };
+
+    /// <summary>
+    /// 指定モードに対応する監視/ルーティング設定を返す（MacroOnly は null）。
+    /// External は <see cref="ExternalAdapterConfig"/> を基底 <see cref="AviutlDropConfig"/> として返す。
+    /// </summary>
     public AviutlDropConfig? ConfigFor(IntegrationMode mode) => mode switch
     {
         IntegrationMode.AviUtl => AviUtl,
         IntegrationMode.AviUtl2 => AviUtl2,
+        IntegrationMode.External => External,
         _ => null,
     };
 }
 
-/// <summary>1つの動画編集環境（AviUtl / AviUtl2）への投げ込み設定。</summary>
-public sealed class AviutlDropConfig
+/// <summary>1つの動画編集環境（AviUtl / AviUtl2 / 外部）への監視・ルーティング設定。</summary>
+public class AviutlDropConfig
 {
     /// <summary>監視対象フォルダ。</summary>
     public List<WatchFolder> Folders { get; set; } = new();
@@ -64,6 +87,26 @@ public sealed class AviutlDropConfig
 
     /// <summary>ファイル書き込み完了待ち（安定化）の最大待機時間（ミリ秒）。</summary>
     public int StableWaitMs { get; set; } = 1500;
+
+    /// <summary>
+    /// この環境で起動する動画編集ソフト（AviUtl / AviUtl2 等）の実行ファイルパス（ランチャー用）。
+    /// 未登録のときはランチャー機能が無効。
+    /// </summary>
+    public string? EditorPath { get; set; }
+}
+
+/// <summary>
+/// 外部アダプタ（コマンド実行）環境の設定。
+/// 監視/ルーティングは <see cref="AviutlDropConfig"/> を継承し、コマンドテンプレートと
+/// タイムアウトを追加する。テンプレート中の <c>{payload}</c> が payload.json のパスへ置換される。
+/// </summary>
+public sealed class ExternalAdapterConfig : AviutlDropConfig
+{
+    /// <summary>実行コマンドテンプレート（例: <c>python davinci_import.py {payload}</c>）。</summary>
+    public string CommandTemplate { get; set; } = string.Empty;
+
+    /// <summary>コマンドの最大実行時間（ミリ秒）。</summary>
+    public int TimeoutMs { get; set; } = 15000;
 }
 
 /// <summary>監視対象フォルダ。</summary>

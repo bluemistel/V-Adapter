@@ -12,6 +12,7 @@ namespace VAdapter.Core.Models;
 [JsonDerivedType(typeof(WaitForActivationInstruction), WaitForActivationInstruction.KindId)]
 [JsonDerivedType(typeof(WaitForDialogInstruction), WaitForDialogInstruction.KindId)]
 [JsonDerivedType(typeof(SwitchTargetInstruction), SwitchTargetInstruction.KindId)]
+[JsonDerivedType(typeof(LaunchAppInstruction), LaunchAppInstruction.KindId)]
 public abstract class Instruction
 {
     /// <summary>命令インスタンスの一意な識別子（並べ替え・編集用）。</summary>
@@ -205,6 +206,33 @@ public sealed class SwitchTargetInstruction : Instruction
             ? "操作対象をダイアログへ"
             : $"操作対象をダイアログ「{TitleContains}」へ")
         : "操作対象をアプリ本体へ";
+}
+
+/// <summary>
+/// 関連ソフト（対象アプリ／指定 exe）を起動する。ランチャー命令。
+/// 実行ファイルが未指定のときは、スクリプトの対象アプリに登録された
+/// <see cref="TargetApplication.ExecutablePath"/> を起動する。
+/// </summary>
+public sealed class LaunchAppInstruction : Instruction
+{
+    public const string KindId = "launchapp";
+    [JsonIgnore] public override string Kind => KindId;
+
+    /// <summary>
+    /// 起動する実行ファイルのフルパス。空のときはスクリプトの対象アプリの実行ファイルを使用する。
+    /// </summary>
+    public string? ExecutablePath { get; set; }
+
+    /// <summary>起動引数（任意）。</summary>
+    public string? Arguments { get; set; }
+
+    /// <summary>同名プロセスが既に起動中なら起動をスキップする。</summary>
+    public bool SkipIfRunning { get; set; } = true;
+
+    [JsonIgnore]
+    public override string Summary => string.IsNullOrWhiteSpace(ExecutablePath)
+        ? "対象アプリを起動"
+        : $"起動: {Path.GetFileName(ExecutablePath)}";
 }
 
 /// <summary>ウィンドウのクライアント左上を基準とした相対矩形。</summary>

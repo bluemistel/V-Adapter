@@ -165,6 +165,7 @@ public partial class MacroEditWindow : Window
             WaitForDialogInstruction.KindId => new WaitForDialogInstruction(),
             SwitchTargetInstruction.KindId => new SwitchTargetInstruction(),
             WaitForTextInstruction.KindId => new WaitForTextInstruction(),
+            LaunchAppInstruction.KindId => new LaunchAppInstruction(),
             _ => throw new InvalidOperationException($"未知の命令種別: {kind}"),
         };
 

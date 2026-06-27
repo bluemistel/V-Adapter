@@ -19,14 +19,37 @@
                 <TextBlock Text="連携環境" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
                 <TextBlock Text="音声・字幕の投げ込み先を選択します。マクロ実行はどのモードでも動作します。"
                            FontSize="11" Foreground="{StaticResource B.TextMuted}" Margin="0,3,0,8" TextWrapping="Wrap"/>
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="ModeMacro" Content="マクロ動作ベース（YMM4 等）" Margin="0,0,18,0"
+                <WrapPanel>
+                    <RadioButton x:Name="ModeMacro" Content="マクロ動作ベース（YMM4 等）" Margin="0,0,18,6"
                                  GroupName="Mode" Checked="OnModeChecked"/>
-                    <RadioButton x:Name="ModeAviUtl" Content="AviUtl + PSDToolKit" Margin="0,0,18,0"
+                    <RadioButton x:Name="ModeAviUtl" Content="AviUtl + PSDToolKit" Margin="0,0,18,6"
                                  GroupName="Mode" Checked="OnModeChecked"/>
-                    <RadioButton x:Name="ModeAviUtl2" Content="AviUtl2 + PSDToolKit2"
+                    <RadioButton x:Name="ModeAviUtl2" Content="AviUtl2 + PSDToolKit2" Margin="0,0,18,6"
                                  GroupName="Mode" Checked="OnModeChecked"/>
-                </StackPanel>
+                    <RadioButton x:Name="ModeExternal" Content="外部アダプタ（コマンド）"
+                                 GroupName="Mode" Checked="OnModeChecked"/>
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 動画編集ソフトの起動（ランチャー）— 全モード共通 -->
+        <Border x:Name="EditorPathPanel" DockPanel.Dock="Top" Background="{StaticResource B.Surface}"
+                CornerRadius="8" BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="動画編集ソフトの起動（ランチャー）" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{StaticResource B.TextPrimary}"/>
+                <TextBlock Text="登録すると、メイン画面ヘッダーの電源ボタンからこの編集ソフトを起動できます（環境ごとに登録）。"
+                           FontSize="11" Foreground="{StaticResource B.TextMuted}" Margin="0,3,0,8" TextWrapping="Wrap"/>
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="参照…" Width="70" Margin="8,0,0,0" Click="OnBrowseEditor"/>
+                    <Button DockPanel.Dock="Right" Content="起動テスト" Width="84" Click="OnLaunchEditorTest"/>
+                    <Grid>
+                        <TextBox x:Name="EditorPathBox" VerticalContentAlignment="Center"
+                                 TextChanged="OnEditorPathChanged"/>
+                        <TextBlock x:Name="EditorPlaceholderText" IsHitTestVisible="False" FontStyle="Italic"
+                                   Foreground="{StaticResource B.TextMuted}" VerticalAlignment="Center" Margin="7,0,0,0"/>
+                    </Grid>
+                </DockPanel>
             </StackPanel>
         </Border>
 
@@ -38,7 +61,25 @@
                        Text="マクロ動作ベースでは、V-Adapter はマクロ実行のみを行い、ファイルの投げ込み（監視）は行いません。動画編集ソフト（YMM4 のカスタムボイス等）が音声・字幕を取り込みます。AviUtl / AviUtl2 へ自動で投げ込むには、上のモードを切り替えてください。"/>
         </Border>
 
-        <!-- AviUtl / AviUtl2 設定 -->
+        <!-- 外部アダプタ（コマンド）設定 -->
+        <Border x:Name="ExternalCmdPanel" DockPanel.Dock="Top" Background="{StaticResource B.Surface}"
+                CornerRadius="8" BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="14,12"
+                Margin="0,0,0,12" Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="外部アダプタ" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
+                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource B.TextMuted}" Margin="0,3,0,8"
+                           Text="検知した音声・字幕を中立な payload.json に書き出し、下記コマンドへ渡します（{payload} がファイルパスに置換）。終了コード 0＝成功。編集ソフト固有の取り込みは外部スクリプト側で実装します。"/>
+                <TextBlock Text="コマンドテンプレート" FontSize="12" Margin="0,0,0,2"/>
+                <TextBox x:Name="CommandBox" Margin="0,0,0,8" FontFamily="{StaticResource F.Mono}"
+                         ToolTip="例: python davinci_import.py {payload}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="タイムアウト (ms)" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox x:Name="TimeoutBox" Width="100"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- AviUtl / AviUtl2 / 外部 共通設定 -->
         <Grid x:Name="AviutlPanel" Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -97,8 +138,10 @@
                         <CheckBox x:Name="AdvanceToItemEndCheck" Content="投入後シークをアイテム終端へ"
                                   FontSize="12" Margin="0,0,0,8"
                                   Checked="OnAdvanceToggled" Unchecked="OnAdvanceToggled"/>
-                        <TextBlock Text="frameAdvance（手動・上をOFF時）" FontSize="12" Margin="0,0,0,2"/>
-                        <TextBox x:Name="FrameAdvanceBox" Margin="0,0,0,8"/>
+                        <StackPanel x:Name="FrameAdvancePanel">
+                            <TextBlock Text="frameAdvance（手動・上をOFF時）" FontSize="12" Margin="0,0,0,2"/>
+                            <TextBox x:Name="FrameAdvanceBox" Margin="0,0,0,8"/>
+                        </StackPanel>
                         <TextBlock Text="安定待ち (ms)" FontSize="12" Margin="0,0,0,2"/>
                         <TextBox x:Name="StableWaitBox" Margin="0,0,0,8"/>
                         <StackPanel x:Name="MarginPanel">

@@ -78,8 +78,37 @@ public partial class MainWindow : Window
         {
             VAdapter.Core.Models.IntegrationMode.AviUtl => "連携: AviUtl",
             VAdapter.Core.Models.IntegrationMode.AviUtl2 => "連携: AviUtl2",
+            VAdapter.Core.Models.IntegrationMode.External => "連携: 外部アダプタ",
             _ => "連携: マクロ動作ベース",
         };
+
+        // ランチャー（電源ボタン）: 現在の連携モードに編集ソフトが登録されていれば有効化。
+        var editor = _state.Integration.EditorPathFor(_state.Integration.ActiveMode);
+        LaunchEditorButton.IsEnabled = !string.IsNullOrWhiteSpace(editor);
+        LaunchEditorButton.ToolTip = string.IsNullOrWhiteSpace(editor)
+            ? "連携設定で動画編集ソフトの実行ファイルを登録すると有効になります"
+            : $"{System.IO.Path.GetFileName(editor)} を起動";
+    }
+
+    private void OnLaunchEditor(object sender, RoutedEventArgs e)
+    {
+        var mode = _state.Integration.ActiveMode;
+        var path = _state.Integration.EditorPathFor(mode);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            MessageBox.Show("動画編集ソフトの実行ファイルが未登録です。連携設定から登録してください。",
+                "確認", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var result = VAdapter.Core.Launch.AppLauncher.Launch(path);
+        if (!result.Success)
+            MessageBox.Show(result.Error ?? "起動に失敗しました。", "エラー",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        else
+            Log(result.AlreadyRunning
+                ? $"[ランチャー] 既に起動しています: {System.IO.Path.GetFileName(path)}"
+                : $"[ランチャー] 起動しました: {System.IO.Path.GetFileName(path)}");
     }
 
     // --- 一覧の更新 ---
@@ -349,7 +378,10 @@ public partial class MainWindow : Window
     private void OnManageTargets(object sender, RoutedEventArgs e)
     {
         var window = new TargetManagerWindow(_state.Library) { Owner = this };
-        window.ShowDialog();
+        // 「保存して閉じる」のときのみ本体へ反映済み。取り消し時は何もしない。
+        if (window.ShowDialog() != true)
+            return;
+
         Persist();
         // 対象アプリ名・構成が変わった可能性があるので表示更新。
         foreach (var row in _rows)

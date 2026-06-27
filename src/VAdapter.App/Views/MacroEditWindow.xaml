@@ -65,6 +65,7 @@
                                     <MenuItem Header="ダイアログ表示待ち" Tag="waitdialog" Click="OnAddInstruction"/>
                                     <MenuItem Header="操作対象の切り替え" Tag="switchtarget" Click="OnAddInstruction"/>
                                     <MenuItem Header="テキスト表示待ち" Tag="waittext" Click="OnAddInstruction"/>
+                                    <MenuItem Header="対象アプリの起動" Tag="launchapp" Click="OnAddInstruction"/>
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>

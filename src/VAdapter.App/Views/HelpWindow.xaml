@@ -29,7 +29,7 @@
                         <TextBlock Text="V-Adapter" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Border VerticalAlignment="Center" Margin="6,2,0,0" Background="{StaticResource B.Accent}"
                                 CornerRadius="999" Padding="6,1">
-                            <TextBlock Text="v0.0.2 α" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
+                            <TextBlock Text="v0.0.3 α" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
                         </Border>
                     </StackPanel>
                     <ListBox x:Name="MenuList" Background="Transparent" BorderThickness="0" Margin="6,0,6,6"
@@ -132,6 +132,14 @@
                     <StackPanel x:Name="SecChangelog" Visibility="Collapsed">
                         <TextBlock Text="更新履歴" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.3 (α)</Run><LineBreak/>
+                            ・関連ソフトのランチャー機能を追加。マクロ命令「対象アプリの起動」、対象アプリ管理に実行ファイル(exe)登録<LineBreak/>
+                            ・連携設定で環境ごとに動画編集ソフト(YMM4 / AviUtl / AviUtl2)の実行ファイルを登録。ヘッダーの電源ボタンから起動<LineBreak/>
+                            ・組込マクロ「合成音声ソフトの起動」を同梱<LineBreak/>
+                            ・投げ込みを疎結合化（中立契約 DropPayload ＋ 差し替え可能アダプタ）。「外部アダプタ（コマンド）」モードを追加<LineBreak/>
+                            ・各マクロを .vamacro 単体ファイルで管理（組込/ユーザー作成を分離）<LineBreak/>
+                            ・library.json / integration.json / script を exe 同階層に集約し完全ポータブル化（初回起動で自動移行）<LineBreak/>
+                            ・対象アプリ管理を改善（先頭選択・「保存して閉じる」・未保存確認）<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.2 (α)</Run><LineBreak/>
                             ・AviUtl / AviUtl2 への音声・字幕 投げ込み連携を追加（ごちゃまぜドロップス外部連携API）<LineBreak/>
                             ・連携環境を3種から切替（マクロ動作ベース / AviUtl+PSDToolKit / AviUtl2+PSDToolKit2）。環境ごとに独立設定<LineBreak/>

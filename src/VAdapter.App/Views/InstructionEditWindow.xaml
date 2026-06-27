@@ -152,6 +152,18 @@
                 <TextBlock Text="タイムアウト (ミリ秒)" Margin="0,0,0,2"/>
                 <TextBox x:Name="WaitTextMsBox" Width="160" HorizontalAlignment="Left"/>
             </StackPanel>
+
+            <!-- 対象アプリの起動 -->
+            <StackPanel x:Name="LaunchPanel" Visibility="Collapsed">
+                <TextBlock Text="起動する実行ファイル（空欄で対象アプリの登録 exe を使用）" Margin="0,0,0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBox x:Name="LaunchPathBox" Width="300"/>
+                    <Button Content="参照…" Width="80" Margin="8,0,0,0" Click="OnBrowseLaunchExe"/>
+                </StackPanel>
+                <CheckBox x:Name="LaunchSkipRunningCheck" Content="既に起動している場合はスキップする" Margin="0,0,0,8"/>
+                <TextBlock Foreground="Gray" TextWrapping="Wrap" Margin="0,4,0,0"
+                           Text="空欄のときは、このスクリプトの対象アプリに登録された実行ファイルを起動します。特定の exe を起動する場合は「参照」で指定してください。起動に失敗した場合はマクロ実行が失敗としてログに表示されます。"/>
+            </StackPanel>
         </StackPanel>
     </DockPanel>
 </Window>

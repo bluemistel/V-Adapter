@@ -43,6 +43,7 @@ public partial class IntegrationSettingsWindow : Window
         {
             IntegrationMode.AviUtl => ModeAviUtl,
             IntegrationMode.AviUtl2 => ModeAviUtl2,
+            IntegrationMode.External => ModeExternal,
             _ => ModeMacro,
         }).IsChecked = true;
         _initializing = false;
@@ -67,6 +68,7 @@ public partial class IntegrationSettingsWindow : Window
     {
         if (ModeAviUtl.IsChecked == true) return IntegrationMode.AviUtl;
         if (ModeAviUtl2.IsChecked == true) return IntegrationMode.AviUtl2;
+        if (ModeExternal.IsChecked == true) return IntegrationMode.External;
         return IntegrationMode.MacroOnly;
     }
 
@@ -75,9 +77,24 @@ public partial class IntegrationSettingsWindow : Window
         _currentConfig = _working.ConfigFor(mode);
 
         var isMacroOnly = mode == IntegrationMode.MacroOnly;
+        var isExternal = mode == IntegrationMode.External;
         MacroOnlyPanel.Visibility = isMacroOnly ? Visibility.Visible : Visibility.Collapsed;
         AviutlPanel.Visibility = isMacroOnly ? Visibility.Collapsed : Visibility.Visible;
+        ExternalCmdPanel.Visibility = isExternal ? Visibility.Visible : Visibility.Collapsed;
+        // frameAdvance（手動）と margin は gcmz 固有。外部アダプタでは隠す。
+        FrameAdvancePanel.Visibility = isExternal ? Visibility.Collapsed : Visibility.Visible;
         MarginPanel.Visibility = mode == IntegrationMode.AviUtl2 ? Visibility.Visible : Visibility.Collapsed;
+
+        // 編集ソフトパス（ランチャー）はモード共通。プレースホルダはモードごとに変える。
+        EditorPathBox.Text = _working.EditorPathFor(mode) ?? string.Empty;
+        EditorPlaceholderText.Text = mode switch
+        {
+            IntegrationMode.MacroOnly => "../YukkuriMovieMaker.exe",
+            IntegrationMode.AviUtl => @"...\aviutl.exe",
+            IntegrationMode.AviUtl2 => @"...\aviutl2.exe",
+            _ => @"...\editor.exe",
+        };
+        UpdateEditorPlaceholder();
 
         _folders.Clear();
         _rules.Clear();
@@ -92,6 +109,12 @@ public partial class IntegrationSettingsWindow : Window
         StableWaitBox.Text = _currentConfig.StableWaitMs.ToString();
         MarginBox.Text = _currentConfig.Margin.ToString();
 
+        if (_currentConfig is ExternalAdapterConfig ext)
+        {
+            CommandBox.Text = ext.CommandTemplate;
+            TimeoutBox.Text = ext.TimeoutMs.ToString();
+        }
+
         foreach (var f in _currentConfig.Folders)
             _folders.Add(new FolderRow(f));
         foreach (var r in _currentConfig.Rules)
@@ -102,6 +125,13 @@ public partial class IntegrationSettingsWindow : Window
 
     private void FlushEditor()
     {
+        // 編集ソフトパス（ランチャー）はモード共通で先に確定（MacroOnly は config が無いため）。
+        var editor = NullIfEmpty(EditorPathBox.Text);
+        if (_working.ActiveMode == IntegrationMode.MacroOnly)
+            _working.MacroEditorPath = editor;
+        else if (_currentConfig is not null)
+            _currentConfig.EditorPath = editor;
+
         if (_currentConfig is null)
             return;
 
@@ -115,6 +145,12 @@ public partial class IntegrationSettingsWindow : Window
         _currentConfig.Margin = ParseOr(MarginBox.Text, _currentConfig.Margin);
         _currentConfig.Folders = _folders.Select(r => r.Model).ToList();
         _currentConfig.Rules = _rules.ToList();
+
+        if (_currentConfig is ExternalAdapterConfig ext)
+        {
+            ext.CommandTemplate = CommandBox.Text?.Trim() ?? string.Empty;
+            ext.TimeoutMs = ParseOr(TimeoutBox.Text, ext.TimeoutMs);
+        }
     }
 
     // --- フォルダ ---
@@ -170,23 +206,18 @@ public partial class IntegrationSettingsWindow : Window
 
     private void RefreshStatus()
     {
-        var available = _state.DropService.IsGcmzAvailable();
-        StatusGcmz.Text = available
-            ? "ごちゃまぜドロップス: 接続OK"
-            : "ごちゃまぜドロップス: 未検出（AviUtl とプラグインの起動を確認）";
-
-        if (!available)
+        // 編集中の作業コピーの選択モードに対する状態を、監視に影響を与えず取得する。
+        FlushEditor();
+        var status = _state.DropService.GetStatus(_working);
+        if (status is null)
         {
-            StatusProject.Text = "プロジェクト: —";
+            StatusGcmz.Text = "投げ込み: 無効（マクロ動作ベース）";
+            StatusProject.Text = "—";
             return;
         }
 
-        var info = _state.DropService.ReadGcmzInfo();
-        StatusProject.Text = info is null
-            ? "プロジェクト: 情報取得不可"
-            : info.HasProject
-                ? $"プロジェクト: 読込済み（{info.Width}x{info.Height} / API v{info.ApiVersion}）"
-                : $"プロジェクト: 未読込（API v{info.ApiVersion}）";
+        StatusGcmz.Text = status.Summary;
+        StatusProject.Text = status.TargetInfo ?? "—";
     }
 
     private void OnTestDrop(object sender, RoutedEventArgs e)
@@ -236,8 +267,54 @@ public partial class IntegrationSettingsWindow : Window
         LogBox.ScrollToEnd();
     }
 
+    // --- 動画編集ソフトの起動（ランチャー） ---
+
+    private void OnEditorPathChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) =>
+        UpdateEditorPlaceholder();
+
+    private void UpdateEditorPlaceholder()
+    {
+        if (EditorPlaceholderText is null)
+            return;
+        EditorPlaceholderText.Visibility = string.IsNullOrEmpty(EditorPathBox.Text)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void OnBrowseEditor(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "動画編集ソフトの実行ファイルを選択",
+            Filter = "実行ファイル (*.exe)|*.exe|すべてのファイル (*.*)|*.*",
+        };
+        if (dialog.ShowDialog(this) == true)
+            EditorPathBox.Text = dialog.FileName;
+    }
+
+    private void OnLaunchEditorTest(object sender, RoutedEventArgs e)
+    {
+        var path = NullIfEmpty(EditorPathBox.Text);
+        if (path is null)
+        {
+            AppendLog("起動テスト: 実行ファイルが未登録です。");
+            return;
+        }
+
+        var result = VAdapter.Core.Launch.AppLauncher.Launch(path);
+        if (!result.Success)
+            MessageBox.Show(result.Error ?? "起動に失敗しました。", "エラー",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        AppendLog(result.Success
+            ? (result.AlreadyRunning ? "起動テスト: 既に起動しています。" : "起動テスト: 起動しました。")
+            : $"起動テスト失敗: {result.Error}");
+    }
+
     private static int ParseOr(string? text, int fallback) =>
         int.TryParse(text?.Trim(), out var v) ? v : fallback;
+
+    private static string? NullIfEmpty(string? s) =>
+        string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
     private static IntegrationSettings DeepClone(IntegrationSettings s) =>
         VAdapterJson.Deserialize<IntegrationSettings>(VAdapterJson.Serialize(s))!;

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using VAdapter.Core.Launch;
 using VAdapter.Core.Models;
 using VAdapter.Automation.Input;
 using VAdapter.Automation.Native;
@@ -44,7 +45,9 @@ public sealed class MacroRunner
         var (script, target) = selection.Value;
         log?.Report($"マクロ「{macro.Name}」を開始（対象: {target?.Name ?? "共通"}）");
 
-        var ctx = new RunContext { Target = target };
+        // 送信先トグルで選ばれた対象アプリ（共通スクリプトのランチャー等で exe 解決に使う）。
+        var preferredTarget = preferredTargetId is null ? null : library.FindTarget(preferredTargetId);
+        var ctx = new RunContext { Target = target, PreferredTarget = preferredTarget };
 
         // 開始時に対象ウィンドウを前面化（割当がある場合）。
         if (target is not null)
@@ -140,6 +143,9 @@ public sealed class MacroRunner
     {
         public required TargetApplication? Target { get; init; }
 
+        /// <summary>送信先トグルで選ばれた対象アプリ（スクリプトが共通のときの起動先解決に使う）。</summary>
+        public TargetApplication? PreferredTarget { get; init; }
+
         /// <summary>「操作対象の切り替え」で指定された送信先ウィンドウ（null は対象アプリ本体）。</summary>
         public IntPtr? ActiveWindow { get; set; }
     }
@@ -161,8 +167,37 @@ public sealed class MacroRunner
             WaitForDialogInstruction waitDlg => await ExecuteWaitForDialog(waitDlg, target, log, ct),
             SwitchTargetInstruction switchTgt => await ExecuteSwitchTarget(switchTgt, ctx, log, ct),
             WaitForTextInstruction waitText => await ExecuteWaitForText(waitText, target, log, ct),
+            LaunchAppInstruction launch => ExecuteLaunchApp(launch, ctx, log),
             _ => MacroRunResult.Fail($"未対応の命令: {instruction.Kind}", instruction),
         };
+    }
+
+    private MacroRunResult ExecuteLaunchApp(LaunchAppInstruction launch, RunContext ctx, IProgress<string>? log)
+    {
+        // 起動先の対象アプリ: スクリプトの対象 → （共通なら）送信先で選ばれた対象。
+        var appTarget = ctx.Target ?? ctx.PreferredTarget;
+
+        // 命令で exe を明示していればそれを、無ければ対象アプリの実行ファイルを起動。
+        var path = !string.IsNullOrWhiteSpace(launch.ExecutablePath)
+            ? launch.ExecutablePath
+            : appTarget?.ExecutablePath;
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            // 原因を切り分けて明示する（紐付けの確認を容易にするため）。
+            var reason = appTarget is null
+                ? "対象アプリが特定できません。命令で exe を直接指定するか、送信先で対象アプリを選択（または対象アプリ付きのスクリプトに配置）してください。"
+                : $"対象アプリ「{appTarget.Name}」に実行ファイルが登録されていません（対象アプリ管理で exe を登録してください）。";
+            return MacroRunResult.Fail($"起動する実行ファイルを特定できませんでした。{reason}", launch);
+        }
+
+        // 起動中判定は対象アプリのプロセス名を優先（exe 名と異なる場合に確実）。
+        var result = AppLauncher.Launch(path, launch.Arguments, launch.SkipIfRunning, appTarget?.ProcessName);
+        if (!result.Success)
+            return MacroRunResult.Fail(result.Error ?? "起動に失敗しました。", launch);
+
+        log?.Report(result.AlreadyRunning ? "    既に起動中のため起動をスキップしました。" : "    起動しました。");
+        return MacroRunResult.Ok();
     }
 
     private async Task<MacroRunResult> ExecuteWait(WaitInstruction wait, CancellationToken ct)

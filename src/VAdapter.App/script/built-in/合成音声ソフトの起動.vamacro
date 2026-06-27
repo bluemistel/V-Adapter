@@ -1,0 +1,30 @@
+{
+  "format": "vadapter.macro-bundle",
+  "version": 1,
+  "targets": [],
+  "macros": [
+    {
+      "id": "429df0b6992a4eba97808e20151bc3d0",
+      "name": "合成音声ソフトの起動",
+      "isBuiltIn": true,
+      "isEnabled": true,
+      "shortcut": {
+        "modifiers": "Control",
+        "virtualKey": 74,
+        "keyName": "J"
+      },
+      "scripts": [
+        {
+          "id": "d959cea7027b48159c615927e24b6b06",
+          "instructions": [
+            {
+              "kind": "launchapp",
+              "skipIfRunning": false,
+              "id": "37886d0636fe4b0297d5ad6ccc67a7de"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

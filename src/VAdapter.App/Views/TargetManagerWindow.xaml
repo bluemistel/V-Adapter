@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="対象アプリ管理" Height="460" Width="720"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner" Closing="OnClosing">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240"/>
@@ -22,30 +22,42 @@
         <!-- 右: 編集パネル -->
         <DockPanel Grid.Column="1">
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-                <Button Content="適用" Width="80" Margin="0,0,8,0" Click="OnApply"/>
-                <Button Content="閉じる" Width="90" IsCancel="True" Click="OnClose"/>
+                <Button Style="{StaticResource PrimaryButton}" Width="130" Margin="0,0,8,0" Click="OnSaveAndClose">
+                    <TextBlock Text="保存して閉じる" Foreground="White"/>
+                </Button>
+                <Button Content="閉じる" Width="90" Click="OnCloseButton"/>
             </StackPanel>
 
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel x:Name="EditorPanel" IsEnabled="False" Margin="0,0,8,0">
                     <TextBlock Text="表示名" Margin="0,0,0,2"/>
-                    <TextBox x:Name="NameBox" Margin="0,0,0,10"/>
+                    <TextBox x:Name="NameBox" Margin="0,0,0,10" TextChanged="OnEditorChanged"/>
 
                     <Button Content="実行中ウィンドウから取得…" Width="220" HorizontalAlignment="Left"
                             Margin="0,0,0,10" Click="OnPickWindow"/>
 
                     <TextBlock Text="プロセス名（拡張子なし）" Margin="0,0,0,2"/>
-                    <TextBox x:Name="ProcessBox" Margin="0,0,0,10"/>
+                    <TextBox x:Name="ProcessBox" Margin="0,0,0,10" TextChanged="OnEditorChanged"/>
 
                     <TextBlock Text="ウィンドウタイトル（部分一致 / 正規表現）" Margin="0,0,0,2"/>
-                    <TextBox x:Name="TitleBox" Margin="0,0,0,4"/>
-                    <CheckBox x:Name="RegexCheck" Content="タイトルを正規表現として扱う" Margin="0,0,0,10"/>
+                    <TextBox x:Name="TitleBox" Margin="0,0,0,4" TextChanged="OnEditorChanged"/>
+                    <CheckBox x:Name="RegexCheck" Content="タイトルを正規表現として扱う" Margin="0,0,0,10"
+                              Checked="OnEditorChanged" Unchecked="OnEditorChanged"/>
 
                     <TextBlock Text="ウィンドウクラス（任意・正規化一致）" Margin="0,0,0,2"/>
-                    <TextBox x:Name="ClassBox" Margin="0,0,0,10"/>
+                    <TextBox x:Name="ClassBox" Margin="0,0,0,10" TextChanged="OnEditorChanged"/>
+
+                    <TextBlock Text="実行ファイル（ランチャー用・任意）" Margin="0,0,0,2"/>
+                    <DockPanel Margin="0,0,0,4">
+                        <Button DockPanel.Dock="Right" Content="参照…" Width="70" Margin="6,0,0,0" Click="OnBrowseExe"/>
+                        <TextBox x:Name="ExePathBox" TextChanged="OnEditorChanged"/>
+                    </DockPanel>
+                    <TextBlock Text="「対象アプリの起動」命令やランチャーから起動する exe。VOICEVOX 等のユーザー領域インストールは参照で指定してください。"
+                               Foreground="Gray" TextWrapping="Wrap" FontSize="11" Margin="0,0,0,10"/>
 
                     <TextBlock Text="座標モード" Margin="0,0,0,2"/>
-                    <ComboBox x:Name="CoordCombo" Width="220" HorizontalAlignment="Left">
+                    <ComboBox x:Name="CoordCombo" Width="220" HorizontalAlignment="Left"
+                              SelectionChanged="OnEditorChanged">
                         <ComboBoxItem Content="相対（ウィンドウ左上基準）" Tag="Relative"/>
                         <ComboBoxItem Content="絶対（ディスプレイ基準）" Tag="Absolute"/>
                     </ComboBox>

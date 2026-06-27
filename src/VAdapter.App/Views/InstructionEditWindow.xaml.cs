@@ -106,7 +106,25 @@ public partial class InstructionEditWindow : Window
                 }
                 UpdateRegionPanelState();
                 break;
+
+            case LaunchAppInstruction launch:
+                TitleText.Text = "対象アプリの起動";
+                LaunchPanel.Visibility = Visibility.Visible;
+                LaunchPathBox.Text = launch.ExecutablePath ?? string.Empty;
+                LaunchSkipRunningCheck.IsChecked = launch.SkipIfRunning;
+                break;
         }
+    }
+
+    private void OnBrowseLaunchExe(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "起動する実行ファイルを選択",
+            Filter = "実行ファイル (*.exe)|*.exe|すべてのファイル (*.*)|*.*",
+        };
+        if (dialog.ShowDialog(this) == true)
+            LaunchPathBox.Text = dialog.FileName;
     }
 
     // --- キー取得 ---
@@ -391,6 +409,11 @@ public partial class InstructionEditWindow : Window
                     { Warn("領域"); return; }
                     waitText.Region = new RelativeRect { X = rx, Y = ry, Width = rw, Height = rh };
                 }
+                break;
+
+            case LaunchAppInstruction launch:
+                launch.ExecutablePath = string.IsNullOrWhiteSpace(LaunchPathBox.Text) ? null : LaunchPathBox.Text.Trim();
+                launch.SkipIfRunning = LaunchSkipRunningCheck.IsChecked == true;
                 break;
         }
 

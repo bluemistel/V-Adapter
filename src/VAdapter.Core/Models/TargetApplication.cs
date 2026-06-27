@@ -23,6 +23,12 @@ public sealed class TargetApplication
     /// <summary>ウィンドウクラス名（任意。指定時は完全一致で絞り込み）。</summary>
     public string? WindowClass { get; set; }
 
+    /// <summary>
+    /// 実行ファイル（exe）のフルパス。ランチャー（「対象アプリの起動」命令）で使用する。
+    /// 未設定（VOICEVOX 等のユーザー領域インストール）の場合は、ユーザーが参照ダイアログで指定する。
+    /// </summary>
+    public string? ExecutablePath { get; set; }
+
     /// <summary>このアプリに対するクリック座標の既定の解釈方法。</summary>
     public CoordinateMode CoordinateMode { get; set; } = CoordinateMode.Relative;
 }

@@ -20,11 +20,18 @@
                            FontSize="11" Foreground="{StaticResource B.TextMuted}"/>
                 <Border DockPanel.Dock="Left" VerticalAlignment="Center" Margin="8,1,0,0"
                         Background="{StaticResource B.Accent}" CornerRadius="999" Padding="6,1">
-                    <TextBlock Text="v0.0.2 α" FontSize="10" FontWeight="SemiBold"
+                    <TextBlock Text="v0.0.3 α" FontSize="10" FontWeight="SemiBold"
                                Foreground="{StaticResource B.PrimaryDark}"/>
                 </Border>
                 <TextBlock x:Name="ModeLabel" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="10,1,0,0"
                            FontSize="11" Foreground="{StaticResource B.TextMuted}"/>
+                <Button x:Name="LaunchEditorButton" DockPanel.Dock="Left" Style="{StaticResource GhostButton}"
+                        VerticalAlignment="Center" Width="26" Height="26" Padding="0" Margin="6,1,0,0"
+                        Click="OnLaunchEditor" Foreground="{StaticResource B.TextTertiary}">
+                    <Path Width="14" Height="14" Stretch="Uniform" Data="{StaticResource I.Power}"
+                          Stroke="{StaticResource B.Primary}" StrokeThickness="1.7"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                </Button>
 
                 <ToggleButton x:Name="PinButton" DockPanel.Dock="Right" Style="{StaticResource PinToggle}"
                               VerticalAlignment="Center" Width="30" Height="30" Click="OnTogglePin"

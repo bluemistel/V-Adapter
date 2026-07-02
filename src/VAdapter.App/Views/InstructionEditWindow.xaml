@@ -164,6 +164,55 @@
                 <TextBlock Foreground="Gray" TextWrapping="Wrap" Margin="0,4,0,0"
                            Text="空欄のときは、このスクリプトの対象アプリに登録された実行ファイルを起動します。特定の exe を起動する場合は「参照」で指定してください。起動に失敗した場合はマクロ実行が失敗としてログに表示されます。"/>
             </StackPanel>
+
+            <!-- UIから情報取得 -->
+            <StackPanel x:Name="ReadUiPanel" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="基準位置" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <ComboBox x:Name="ReadUiAnchorCombo" Width="180">
+                        <ComboBoxItem Content="左上" Tag="TopLeft"/>
+                        <ComboBoxItem Content="右上" Tag="TopRight"/>
+                        <ComboBoxItem Content="左下" Tag="BottomLeft"/>
+                        <ComboBoxItem Content="右下" Tag="BottomRight"/>
+                        <ComboBoxItem Content="中央" Tag="Center"/>
+                    </ComboBox>
+                </StackPanel>
+                <Button Content="UI要素を取得（クリック）…" Width="220" HorizontalAlignment="Left"
+                        Margin="0,0,0,6" Click="OnCaptureUiElement"/>
+                <TextBlock x:Name="ReadUiSelectorText" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,10" Text="(未取得)"/>
+                <TextBlock Text="格納する変数名（例: character / serifu）" Margin="0,0,0,2"/>
+                <TextBox x:Name="ReadUiVarBox" Width="200" HorizontalAlignment="Left"/>
+                <TextBlock Foreground="Gray" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Text="クリックした位置を実行時に読み直してテキストを取得します（AutomationId が無い要素・動的テキストにも追従）。VOICEROID2 では、キャラクター名は右上の名前表示、本文は中央のテキスト欄をクリックすると確実です。ウィンドウサイズを変える運用なら、名前は基準位置「右上」を選ぶと安定します。"/>
+            </StackPanel>
+
+            <!-- 保存ファイル名の書き換え -->
+            <StackPanel x:Name="SetSaveNamePanel" Visibility="Collapsed">
+                <TextBlock Text="ファイル名テンプレート" Margin="0,0,0,2"/>
+                <TextBox x:Name="SaveTemplateBox" Margin="0,0,0,8" ToolTip="{}{date}_{character}_{serifu:10}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="拡張子" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox x:Name="SaveExtBox" Width="80"/>
+                    <TextBlock Text="キャラ変数" VerticalAlignment="Center" Margin="16,0,6,0"/>
+                    <TextBox x:Name="SaveCharVarBox" Width="110"/>
+                </StackPanel>
+                <TextBlock Text="保存パス変数（字幕書き出しで参照）" Margin="0,0,0,2"/>
+                <TextBox x:Name="SavePathVarBox" Width="160" HorizontalAlignment="Left"/>
+                <CheckBox x:Name="SaveIncludeFolderCheck" Margin="0,10,0,0"
+                          Content="ファイル名欄にフォルダを含める（フルパス・標準ダイアログ用）"/>
+                <TextBlock Foreground="Gray" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Text="「操作対象の切り替え」で保存ダイアログ(#32770)へ切り替えた後に使用します。既定はファイル名のみを入力します（VOICEROID2 の保存ダイアログは \ や : を拒否するため OFF のまま）。この場合の保存先フォルダは VOICEROID2 側の保存先設定（連携設定の監視フォルダに合わせる）に従います。トークン: {date} / {date:書式} / {変数} / {変数:先頭N文字}。"/>
+            </StackPanel>
+
+            <!-- 字幕テキストの書き出し -->
+            <StackPanel x:Name="WriteSubtitlePanel" Visibility="Collapsed">
+                <TextBlock Text="本文の変数名" Margin="0,0,0,2"/>
+                <TextBox x:Name="SubTextVarBox" Width="160" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                <TextBlock Text="保存パスの変数名" Margin="0,0,0,2"/>
+                <TextBox x:Name="SubPathVarBox" Width="160" HorizontalAlignment="Left"/>
+                <TextBlock Foreground="Gray" TextWrapping="Wrap" Margin="0,8,0,0"
+                           Text="保存パスと同じ基底名の .txt を UTF-8 で書き出します（内容＝本文変数）。「保存ファイル名の書き換え」の後に配置してください。"/>
+            </StackPanel>
         </StackPanel>
     </DockPanel>
 </Window>

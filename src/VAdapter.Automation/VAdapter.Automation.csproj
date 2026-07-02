@@ -11,6 +11,8 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWindowsForms>true</UseWindowsForms>
+    <!-- System.Windows.Automation（UIAutomationClient/Types）は WindowsDesktop の WPF パックに含まれるため有効化 -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
 </Project>

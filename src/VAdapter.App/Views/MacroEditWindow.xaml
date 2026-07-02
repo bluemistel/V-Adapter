@@ -43,8 +43,10 @@
             <GroupBox Grid.Column="0" Header="スクリプト（対象アプリ別）" Margin="0,0,8,0">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="追加 ▾" Width="90" Margin="0,0,6,0" Click="OnAddScriptClick"/>
-                        <Button Content="削除" Width="80" Click="OnDeleteScript"/>
+                        <Button Content="追加 ▾" Width="78" Margin="0,0,6,0" Click="OnAddScriptClick"/>
+                        <Button Content="削除" Width="60" Margin="0,0,6,0" Click="OnDeleteScript"/>
+                        <Button Content="↑" Width="40" Margin="0,0,6,0" Click="OnMoveScriptUp" ToolTip="上へ"/>
+                        <Button Content="↓" Width="40" Click="OnMoveScriptDown" ToolTip="下へ"/>
                     </StackPanel>
                     <ListBox x:Name="ScriptList" DisplayMemberPath="Display"
                              SelectionChanged="OnScriptSelectionChanged"/>
@@ -66,6 +68,10 @@
                                     <MenuItem Header="操作対象の切り替え" Tag="switchtarget" Click="OnAddInstruction"/>
                                     <MenuItem Header="テキスト表示待ち" Tag="waittext" Click="OnAddInstruction"/>
                                     <MenuItem Header="対象アプリの起動" Tag="launchapp" Click="OnAddInstruction"/>
+                                    <Separator/>
+                                    <MenuItem Header="UIから情報取得（VOICEROID2等）" Tag="readui" Click="OnAddInstruction"/>
+                                    <MenuItem Header="保存ファイル名の書き換え" Tag="savename" Click="OnAddInstruction"/>
+                                    <MenuItem Header="字幕テキストの書き出し" Tag="writesubtitle" Click="OnAddInstruction"/>
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>

@@ -1,5 +1,8 @@
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 using VAdapter.Core.Launch;
+using VAdapter.Core.Media;
 using VAdapter.Core.Models;
 using VAdapter.Automation.Input;
 using VAdapter.Automation.Native;
@@ -16,6 +19,7 @@ public sealed class MacroRunner
     private readonly WindowLocator _locator = new();
     private readonly InputSender _input = new();
     private readonly OcrService _ocr = new();
+    private readonly UiAutomationReader _uia = new();
 
     /// <summary>待機系命令のポーリング間隔（ミリ秒）。テストで上書き可能。</summary>
     public int PollInterval { get; init; } = PollIntervalMs;
@@ -33,7 +37,8 @@ public sealed class MacroRunner
         MacroLibrary library,
         IProgress<string>? log = null,
         CancellationToken ct = default,
-        string? preferredTargetId = null)
+        string? preferredTargetId = null,
+        IntegrationSettings? integration = null)
     {
         var selection = SelectScript(macro, library, preferredTargetId);
         if (selection is null)
@@ -47,7 +52,7 @@ public sealed class MacroRunner
 
         // 送信先トグルで選ばれた対象アプリ（共通スクリプトのランチャー等で exe 解決に使う）。
         var preferredTarget = preferredTargetId is null ? null : library.FindTarget(preferredTargetId);
-        var ctx = new RunContext { Target = target, PreferredTarget = preferredTarget };
+        var ctx = new RunContext { Target = target, PreferredTarget = preferredTarget, Integration = integration };
 
         // 開始時に対象ウィンドウを前面化（割当がある場合）。
         if (target is not null)
@@ -146,6 +151,12 @@ public sealed class MacroRunner
         /// <summary>送信先トグルで選ばれた対象アプリ（スクリプトが共通のときの起動先解決に使う）。</summary>
         public TargetApplication? PreferredTarget { get; init; }
 
+        /// <summary>現在の連携設定（VOICEROID2 保存先解決などに使用）。</summary>
+        public IntegrationSettings? Integration { get; init; }
+
+        /// <summary>命令間で受け渡す実行変数（UIから情報取得 → 保存ファイル名の書き換え 等）。</summary>
+        public Dictionary<string, string> Variables { get; } = new(StringComparer.OrdinalIgnoreCase);
+
         /// <summary>「操作対象の切り替え」で指定された送信先ウィンドウ（null は対象アプリ本体）。</summary>
         public IntPtr? ActiveWindow { get; set; }
     }
@@ -168,6 +179,9 @@ public sealed class MacroRunner
             SwitchTargetInstruction switchTgt => await ExecuteSwitchTarget(switchTgt, ctx, log, ct),
             WaitForTextInstruction waitText => await ExecuteWaitForText(waitText, target, log, ct),
             LaunchAppInstruction launch => ExecuteLaunchApp(launch, ctx, log),
+            ReadUiTextInstruction readui => ExecuteReadUiText(readui, ctx, log),
+            SetSaveFileNameInstruction savename => ExecuteSetSaveFileName(savename, ctx, log),
+            WriteSubtitleInstruction writesub => ExecuteWriteSubtitle(writesub, ctx, log),
             _ => MacroRunResult.Fail($"未対応の命令: {instruction.Kind}", instruction),
         };
     }
@@ -197,6 +211,87 @@ public sealed class MacroRunner
             return MacroRunResult.Fail(result.Error ?? "起動に失敗しました。", launch);
 
         log?.Report(result.AlreadyRunning ? "    既に起動中のため起動をスキップしました。" : "    起動しました。");
+        return MacroRunResult.Ok();
+    }
+
+    private MacroRunResult ExecuteReadUiText(ReadUiTextInstruction instr, RunContext ctx, IProgress<string>? log)
+    {
+        if (!instr.HasCapture)
+            return MacroRunResult.Fail("UI要素が未指定です（「UI要素を取得（クリック）」で対象を指定してください）。", instr);
+        if (ctx.Target is null)
+            return MacroRunResult.Fail("UIから情報取得には対象アプリの割当が必要です。", instr);
+
+        var window = _locator.FindForActivation(ctx.Target);
+        if (window is null)
+            return MacroRunResult.Fail($"対象アプリ「{ctx.Target.Name}」のウィンドウが見つかりません。", instr);
+
+        string? text = null;
+
+        // AutomationId があればセレクタで（安定）。
+        if (!string.IsNullOrEmpty(instr.Selector.AutomationId))
+            text = _uia.ReadText(window.Handle, instr.Selector);
+
+        // 座標ベース: 実行時に FromPoint で取り直す（VOICEROID2 等の無名 WPF 要素・動的テキストに強い）。
+        if (text is null && instr.PointCaptured)
+        {
+            var (_, _, clientW, clientH) = WindowGeometry.GetClientAreaOnScreen(window.Handle);
+            var (anchorX, anchorY) = WindowGeometry.AnchorPoint(clientW, clientH, instr.Anchor);
+            var (sx, sy) = WindowGeometry.ClientToScreen(window.Handle, anchorX + instr.X, anchorY + instr.Y);
+            text = _uia.ReadTextAtPoint(sx, sy);
+        }
+
+        if (string.IsNullOrEmpty(text))
+            return MacroRunResult.Fail("UI要素からテキストを取得できませんでした（対象の要素・位置を再取得してください）。", instr);
+
+        ctx.Variables[instr.VariableName] = text;
+        log?.Report($"    取得: {{{instr.VariableName}}} = {Trim(text)}");
+        return MacroRunResult.Ok();
+    }
+
+    private MacroRunResult ExecuteSetSaveFileName(SetSaveFileNameInstruction instr, RunContext ctx, IProgress<string>? log)
+    {
+        if (ctx.ActiveWindow is not { } dialog || !NativeMethods.IsWindow(dialog))
+            return MacroRunResult.Fail("操作対象が保存ダイアログに切り替わっていません（先に「操作対象の切り替え」でダイアログを指定してください）。", instr);
+
+        var mode = ctx.Integration?.ActiveMode ?? IntegrationMode.MacroOnly;
+        var character = ctx.Variables.GetValueOrDefault(instr.CharacterVariable);
+        var folder = ctx.Integration?.ResolveVoiceroid2Folder(mode, character);
+        if (string.IsNullOrWhiteSpace(folder))
+            return MacroRunResult.Fail(
+                $"保存先フォルダを解決できません（連携設定の VOICEROID2 オプションでキャラクター「{character}」の保存先を設定してください）。", instr);
+        if (!Directory.Exists(folder))
+            return MacroRunResult.Fail($"保存先フォルダが存在しません: {folder}", instr);
+
+        var fullPath = SaveNameComposer.ResolvePath(folder, instr.FileNameTemplate, ctx.Variables, DateTime.Now, instr.Extension);
+
+        // ダイアログへ入れる値。既定はファイル名のみ（VOICEROID2 はパス不可）。
+        var valueToSet = instr.IncludeFolderInName ? fullPath : Path.GetFileName(fullPath);
+        if (!_uia.SetText(dialog, selector: null, valueToSet))
+            return MacroRunResult.Fail("保存ダイアログのファイル名欄に値を設定できませんでした。", instr);
+
+        ctx.Variables[instr.SavePathVariable] = fullPath;
+        log?.Report($"    保存名: {Path.GetFileName(fullPath)}（保存先: {folder}）");
+        return MacroRunResult.Ok();
+    }
+
+    private MacroRunResult ExecuteWriteSubtitle(WriteSubtitleInstruction instr, RunContext ctx, IProgress<string>? log)
+    {
+        var savePath = ctx.Variables.GetValueOrDefault(instr.PathVariable);
+        if (string.IsNullOrWhiteSpace(savePath))
+            return MacroRunResult.Fail("保存パスが未設定です（先に「保存ファイル名の書き換え」を実行してください）。", instr);
+
+        var text = ctx.Variables.GetValueOrDefault(instr.TextVariable) ?? string.Empty;
+        var txtPath = Path.ChangeExtension(savePath, ".txt");
+        try
+        {
+            File.WriteAllText(txtPath, text, new UTF8Encoding(false));
+        }
+        catch (Exception ex)
+        {
+            return MacroRunResult.Fail($"字幕テキストの書き出しに失敗しました: {ex.Message}", instr);
+        }
+
+        log?.Report($"    字幕: {Path.GetFileName(txtPath)}（UTF-8）");
         return MacroRunResult.Ok();
     }
 

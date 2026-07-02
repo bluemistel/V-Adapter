@@ -13,6 +13,9 @@ namespace VAdapter.Core.Models;
 [JsonDerivedType(typeof(WaitForDialogInstruction), WaitForDialogInstruction.KindId)]
 [JsonDerivedType(typeof(SwitchTargetInstruction), SwitchTargetInstruction.KindId)]
 [JsonDerivedType(typeof(LaunchAppInstruction), LaunchAppInstruction.KindId)]
+[JsonDerivedType(typeof(ReadUiTextInstruction), ReadUiTextInstruction.KindId)]
+[JsonDerivedType(typeof(SetSaveFileNameInstruction), SetSaveFileNameInstruction.KindId)]
+[JsonDerivedType(typeof(WriteSubtitleInstruction), WriteSubtitleInstruction.KindId)]
 public abstract class Instruction
 {
     /// <summary>命令インスタンスの一意な識別子（並べ替え・編集用）。</summary>
@@ -233,6 +236,99 @@ public sealed class LaunchAppInstruction : Instruction
     public override string Summary => string.IsNullOrWhiteSpace(ExecutablePath)
         ? "対象アプリを起動"
         : $"起動: {Path.GetFileName(ExecutablePath)}";
+}
+
+/// <summary>
+/// 対象アプリの UI 要素（UI Automation）からテキストを取得し、実行変数へ格納する。
+/// VOICEROID2 等の「キャラ表示エリア名」「本文」を取得する用途（例外処理）。
+/// </summary>
+public sealed class ReadUiTextInstruction : Instruction
+{
+    public const string KindId = "readui";
+    [JsonIgnore] public override string Kind => KindId;
+
+    /// <summary>取得する UI 要素の選択条件（AutomationId がある要素向け。任意）。</summary>
+    public UiElementSelector Selector { get; set; } = new();
+
+    /// <summary>
+    /// 座標ベース取得。実行時にこの位置を <c>FromPoint</c> で取り直してテキストを読む
+    /// （AutomationId を持たない WPF コントロールでも安定。値が動的でも都度読み直す）。
+    /// X,Y は対象ウィンドウのクライアント領域内、<see cref="Anchor"/> 基準のオフセット。
+    /// </summary>
+    public bool PointCaptured { get; set; }
+
+    public int X { get; set; }
+    public int Y { get; set; }
+    public ClickAnchor Anchor { get; set; } = ClickAnchor.TopLeft;
+
+    /// <summary>取得したテキストを格納する変数名（例: "character" / "serifu"）。</summary>
+    public string VariableName { get; set; } = "character";
+
+    /// <summary>取得条件が設定済みか（座標 or セレクタ）。</summary>
+    [JsonIgnore]
+    public bool HasCapture => PointCaptured || Selector.HasAnyCondition;
+
+    [JsonIgnore]
+    public override string Summary
+    {
+        get
+        {
+            var how = PointCaptured ? $"座標 {X},{Y}" : Selector.Describe();
+            return $"UIから情報取得 → {{{VariableName}}}（{how}）";
+        }
+    }
+}
+
+/// <summary>
+/// 現在の操作対象（保存ダイアログ）のファイル名欄を、テンプレート＋実行変数から生成した
+/// フルパスへ書き換える。保存先フォルダは連携設定の VOICEROID2 キャラ別マッピングから解決する。
+/// </summary>
+public sealed class SetSaveFileNameInstruction : Instruction
+{
+    public const string KindId = "savename";
+    [JsonIgnore] public override string Kind => KindId;
+
+    /// <summary>ファイル名テンプレート（例: <c>{date}_{character}_{serifu:10}</c>）。</summary>
+    public string FileNameTemplate { get; set; } = Media.SaveNameComposer.DefaultTemplate;
+
+    /// <summary>付与する拡張子（VOICEROID2 は wav）。</summary>
+    public string Extension { get; set; } = ".wav";
+
+    /// <summary>保存先フォルダの解決に使うキャラクター名の変数名。</summary>
+    public string CharacterVariable { get; set; } = "character";
+
+    /// <summary>生成したフルパスを格納する変数名（字幕書き出しで参照）。</summary>
+    public string SavePathVariable { get; set; } = "savepath";
+
+    /// <summary>
+    /// ダイアログのファイル名欄にフォルダを含むフルパスを入れるか。
+    /// 既定 false（ファイル名のみ）。VOICEROID2 の保存ダイアログは <c>\</c>/<c>:</c> を
+    /// 「使えない文字」として拒否するため、フォルダは含めない（保存先は VOICEROID2 側の設定に従う）。
+    /// パスをそのまま受け付ける標準ダイアログでは true にできる。
+    /// </summary>
+    public bool IncludeFolderInName { get; set; }
+
+    [JsonIgnore]
+    public override string Summary => $"保存ファイル名の書き換え（{FileNameTemplate}{Extension}）";
+}
+
+/// <summary>
+/// 直前に決めた保存パス（<see cref="SetSaveFileNameInstruction.SavePathVariable"/>）と同じ基底名の
+/// <c>.txt</c> を UTF-8 で書き出す。内容は本文の実行変数。
+/// </summary>
+public sealed class WriteSubtitleInstruction : Instruction
+{
+    public const string KindId = "writesubtitle";
+    [JsonIgnore] public override string Kind => KindId;
+
+    /// <summary>保存パスを保持する変数名（<see cref="SetSaveFileNameInstruction.SavePathVariable"/> と対応）。</summary>
+    public string PathVariable { get; set; } = "savepath";
+
+    /// <summary>字幕本文を保持する変数名。</summary>
+    public string TextVariable { get; set; } = "serifu";
+
+    [JsonIgnore]
+    public override string Summary => $"字幕テキストの書き出し（{{{TextVariable}}} → {{{PathVariable}}}.txt, UTF-8）";
 }
 
 /// <summary>ウィンドウのクライアント左上を基準とした相対矩形。</summary>

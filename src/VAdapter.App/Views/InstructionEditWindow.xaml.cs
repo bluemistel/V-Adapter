@@ -113,7 +113,86 @@ public partial class InstructionEditWindow : Window
                 LaunchPathBox.Text = launch.ExecutablePath ?? string.Empty;
                 LaunchSkipRunningCheck.IsChecked = launch.SkipIfRunning;
                 break;
+
+            case ReadUiTextInstruction readui:
+                TitleText.Text = "UIから情報取得";
+                ReadUiPanel.Visibility = Visibility.Visible;
+                ReadUiVarBox.Text = readui.VariableName;
+                ReadUiAnchorCombo.SelectedIndex = (int)readui.Anchor;
+                ReadUiSelectorText.Text = DescribeReadUiCapture(readui);
+                break;
+
+            case SetSaveFileNameInstruction savename:
+                TitleText.Text = "保存ファイル名の書き換え";
+                SetSaveNamePanel.Visibility = Visibility.Visible;
+                SaveTemplateBox.Text = savename.FileNameTemplate;
+                SaveExtBox.Text = savename.Extension;
+                SaveCharVarBox.Text = savename.CharacterVariable;
+                SavePathVarBox.Text = savename.SavePathVariable;
+                SaveIncludeFolderCheck.IsChecked = savename.IncludeFolderInName;
+                break;
+
+            case WriteSubtitleInstruction writesub:
+                TitleText.Text = "字幕テキストの書き出し";
+                WriteSubtitlePanel.Visibility = Visibility.Visible;
+                SubTextVarBox.Text = writesub.TextVariable;
+                SubPathVarBox.Text = writesub.PathVariable;
+                break;
         }
+    }
+
+    private async void OnCaptureUiElement(object sender, RoutedEventArgs e)
+    {
+        if (_working is not ReadUiTextInstruction readui)
+            return;
+
+        var anchor = (ClickAnchor)Math.Max(0, ReadUiAnchorCombo.SelectedIndex);
+        var saved = MinimizeWindowChain();
+        try
+        {
+            await Task.Delay(250);
+            var (screenX, screenY) = await CoordinateCapture.CaptureNextClickAsync();
+
+            var window = _locator.GetTopLevelWindowAt(screenX, screenY);
+            if (window is null)
+            {
+                MessageBox.Show("クリック位置のウィンドウを特定できませんでした。", "確認",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // 実行時に FromPoint で読み直せるよう、ウィンドウのアンカー基準オフセットとして保存。
+            var (cx, cy) = WindowGeometry.ScreenToClient(window.Handle, screenX, screenY);
+            var (_, _, clientW, clientH) = WindowGeometry.GetClientAreaOnScreen(window.Handle);
+            var (anchorX, anchorY) = WindowGeometry.AnchorPoint(clientW, clientH, anchor);
+
+            readui.X = cx - anchorX;
+            readui.Y = cy - anchorY;
+            readui.Anchor = anchor;
+            readui.PointCaptured = true;
+            // 参考情報としてセレクタも保持（AutomationId があれば実行時に優先利用）。
+            readui.Selector = new UiAutomationReader().SelectorFromPoint(screenX, screenY) ?? new UiElementSelector();
+
+            ReadUiSelectorText.Text = DescribeReadUiCapture(readui);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"UI要素の取得に失敗しました: {ex.Message}", "エラー",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            RestoreWindowChain(saved);
+        }
+    }
+
+    private static string DescribeReadUiCapture(ReadUiTextInstruction r)
+    {
+        if (!r.HasCapture)
+            return "(未取得)";
+        var pt = r.PointCaptured ? $"座標 {r.X},{r.Y}" : null;
+        var sel = r.Selector.HasAnyCondition ? r.Selector.Describe() : null;
+        return string.Join(" / ", new[] { pt, sel }.Where(s => !string.IsNullOrEmpty(s)));
     }
 
     private void OnBrowseLaunchExe(object sender, RoutedEventArgs e)
@@ -414,6 +493,26 @@ public partial class InstructionEditWindow : Window
             case LaunchAppInstruction launch:
                 launch.ExecutablePath = string.IsNullOrWhiteSpace(LaunchPathBox.Text) ? null : LaunchPathBox.Text.Trim();
                 launch.SkipIfRunning = LaunchSkipRunningCheck.IsChecked == true;
+                break;
+
+            case ReadUiTextInstruction readui:
+                if (!readui.HasCapture) { Warn("UI要素（未取得）"); return; }
+                if (string.IsNullOrWhiteSpace(ReadUiVarBox.Text)) { Warn("変数名"); return; }
+                readui.VariableName = ReadUiVarBox.Text.Trim();
+                break;
+
+            case SetSaveFileNameInstruction savename:
+                if (string.IsNullOrWhiteSpace(SaveTemplateBox.Text)) { Warn("ファイル名テンプレート"); return; }
+                savename.FileNameTemplate = SaveTemplateBox.Text.Trim();
+                savename.Extension = string.IsNullOrWhiteSpace(SaveExtBox.Text) ? ".wav" : SaveExtBox.Text.Trim();
+                savename.CharacterVariable = string.IsNullOrWhiteSpace(SaveCharVarBox.Text) ? "character" : SaveCharVarBox.Text.Trim();
+                savename.SavePathVariable = string.IsNullOrWhiteSpace(SavePathVarBox.Text) ? "savepath" : SavePathVarBox.Text.Trim();
+                savename.IncludeFolderInName = SaveIncludeFolderCheck.IsChecked == true;
+                break;
+
+            case WriteSubtitleInstruction writesub:
+                writesub.TextVariable = string.IsNullOrWhiteSpace(SubTextVarBox.Text) ? "serifu" : SubTextVarBox.Text.Trim();
+                writesub.PathVariable = string.IsNullOrWhiteSpace(SubPathVarBox.Text) ? "savepath" : SubPathVarBox.Text.Trim();
                 break;
         }
 

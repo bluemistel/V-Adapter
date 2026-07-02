@@ -3,6 +3,16 @@
   "version": 1,
   "targets": [
     {
+      "id": "a2ff505e5764430ab964d575066626ad",
+      "name": "A.I.VOICE2",
+      "processName": "aivoice",
+      "windowTitlePattern": "A.I.VOICE2 Editor",
+      "titleIsRegex": false,
+      "windowClass": "FLUTTER_RUNNER_WIN32_WINDOW",
+      "executablePath": "C:\\Program Files\\AI\\AIVoice2\\AIVoice2Editor\\aivoice.exe",
+      "coordinateMode": "Relative"
+    },
+    {
       "id": "34f435a6eda84498837599286e9a3d32",
       "name": "CeVIO AI",
       "processName": "CeVIO AI",
@@ -13,13 +23,12 @@
       "coordinateMode": "Relative"
     },
     {
-      "id": "88583c921c7448d4a073ac358862f5df",
-      "name": "VOICEPEAK",
-      "processName": "voicepeak",
-      "windowTitlePattern": "VOICEPEAK",
+      "id": "d9f748a10ef94f068a5c6069ccae13a1",
+      "name": "VOICEVOX",
+      "processName": "VOICEVOX",
+      "windowTitlePattern": "VOICEVOX",
       "titleIsRegex": false,
-      "windowClass": "JUCE_19ef2440e4c",
-      "executablePath": "C:\\Program Files\\VOICEPEAK\\voicepeak.exe",
+      "windowClass": "Chrome_WidgetWin_1",
       "coordinateMode": "Relative"
     },
     {
@@ -33,20 +42,39 @@
       "coordinateMode": "Relative"
     },
     {
-      "id": "a2ff505e5764430ab964d575066626ad",
-      "name": "A.I.VOICE2",
-      "processName": "aivoice",
-      "windowTitlePattern": "A.I.VOICE2 Editor",
+      "id": "88583c921c7448d4a073ac358862f5df",
+      "name": "VOICEPEAK",
+      "processName": "voicepeak",
+      "windowTitlePattern": "VOICEPEAK",
       "titleIsRegex": false,
-      "windowClass": "FLUTTER_RUNNER_WIN32_WINDOW",
-      "executablePath": "C:\\Program Files\\AI\\AIVoice2\\AIVoice2Editor\\aivoice.exe",
+      "windowClass": "JUCE_19ef2440e4c",
+      "executablePath": "C:\\Program Files\\VOICEPEAK\\voicepeak.exe",
       "coordinateMode": "Relative"
     },
     {
-      "id": "d9f748a10ef94f068a5c6069ccae13a1",
-      "name": "VOICEVOX",
-      "processName": "VOICEVOX",
-      "windowTitlePattern": "VOICEVOX",
+      "id": "b7e2c1a4d5f6470890a1b2c3d4e5f701",
+      "name": "VOICEROID2",
+      "processName": "VoiceroidEditor",
+      "windowTitlePattern": "VOICEROID2",
+      "titleIsRegex": false,
+      "executablePath": "C:\\Program Files\\AHS\\VOICEROID2\\VoiceroidEditor.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "63c09e0eb1964a1eb1ddf863b97616e9",
+      "name": "A.I.VOICE",
+      "processName": "AIVoiceEditor",
+      "windowTitlePattern": "A.I.VOICE Editor",
+      "titleIsRegex": false,
+      "windowClass": "HwndWrapper[AIVoiceEditor.exe;;c7e8cd3f-6ace-4214-8e62-5b1003209af0]",
+      "executablePath": "C:\\Program Files\\AI\\AIVoice\\AIVoiceEditor\\AIVoiceEditor.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "3414a23b116e4b369e7beb64d870a5cc",
+      "name": "COEIROINKv2",
+      "processName": "COEIROINKv2",
+      "windowTitlePattern": "coeiroink-v2",
       "titleIsRegex": false,
       "windowClass": "Chrome_WidgetWin_1",
       "coordinateMode": "Relative"
@@ -55,7 +83,7 @@
   "macros": [
     {
       "id": "d02f83fb8acc4ff9b1baac11592b172f",
-      "name": "音声の再生",
+      "name": "\u97F3\u58F0\u306E\u518D\u751F",
       "isBuiltIn": true,
       "isEnabled": true,
       "shortcut": {
@@ -158,11 +186,6 @@
               "id": "83143bce59b04610941b038d13e48374"
             },
             {
-              "kind": "wait",
-              "durationMs": 500,
-              "id": "5046e20b14424e0d8eda6a26fda67551"
-            },
-            {
               "kind": "sendkeys",
               "keyCombination": {
                 "modifiers": "None",
@@ -212,6 +235,66 @@
                 "keyName": "Space"
               },
               "id": "75cf8021bc254c8ea41d1c4d6f698734"
+            }
+          ]
+        },
+        {
+          "id": "7e9f369b73854f05a3a51f7718161aa2",
+          "targetApplicationId": "b7e2c1a4d5f6470890a1b2c3d4e5f701",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "1d73d18155d747098febcf7c2283bde5"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 116,
+                "keyName": "F5"
+              },
+              "id": "599736ddf4584bd8ba353920aa1646b8"
+            }
+          ]
+        },
+        {
+          "id": "aa596bc087ca434b857ed89195eabe52",
+          "targetApplicationId": "63c09e0eb1964a1eb1ddf863b97616e9",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "93eb5c2bb50e42afb9e44b4f1dd47c1f"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 116,
+                "keyName": "F5"
+              },
+              "id": "14fcfd365dce4587bd1ad7ecb954f58f"
+            }
+          ]
+        },
+        {
+          "id": "cc7f2a83768d4ce1862422ba033311b7",
+          "targetApplicationId": "3414a23b116e4b369e7beb64d870a5cc",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "54279e0143844bb39ec185228b015dd8"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 80,
+                "keyName": "P"
+              },
+              "id": "cbfc99aab54c4532a029efc9299827ee"
             }
           ]
         }

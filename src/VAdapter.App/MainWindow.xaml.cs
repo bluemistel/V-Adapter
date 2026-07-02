@@ -52,6 +52,42 @@ public partial class MainWindow : Window
         UpdateModeLabel();
 
         Log("準備完了。マクロを選択して実行、またはショートカットで起動できます。");
+
+        // 起動後に更新確認（失敗しても無視、UI はブロックしない）。
+        _ = CheckForUpdateAsync();
+    }
+
+    private readonly Services.UpdateService _updateService = new();
+
+    private async Task CheckForUpdateAsync()
+    {
+        var result = await _updateService.CheckAsync();
+        if (result is not { UpdateAvailable: true, Latest: { } latest })
+            return;
+
+        UpdateText.Text = $"新しいバージョン v{latest.Major}.{latest.Minor}.{latest.Build} が公開されています"
+            + $"（現在 v{result.Current.Major}.{result.Current.Minor}.{result.Current.Build}）。";
+        UpdateBanner.Visibility = Visibility.Visible;
+        Log($"更新あり: v{latest.Major}.{latest.Minor}.{latest.Build}");
+    }
+
+    private void OnOpenDownload(object sender, RoutedEventArgs e) => OpenReleasesPage();
+
+    private void OnDismissUpdate(object sender, RoutedEventArgs e) => UpdateBanner.Visibility = Visibility.Collapsed;
+
+    private static void OpenReleasesPage()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                Services.UpdateService.ReleasesUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{Services.UpdateService.ReleasesUrl}\n\n{ex.Message}",
+                "アップデート", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void OnDropLog(string message) =>
@@ -132,7 +168,8 @@ public partial class MainWindow : Window
             _activeTargetId = null;
 
         var pillStyle = (Style)FindResource("TargetPillToggle");
-        foreach (var target in _state.Library.Targets)
+        var visibleTargets = _state.Library.Targets.Where(t => !t.HideFromSendTargets).ToList();
+        foreach (var target in visibleTargets)
         {
             var toggle = new ToggleButton
             {
@@ -147,7 +184,7 @@ public partial class MainWindow : Window
             TargetSwitcher.Children.Add(toggle);
         }
 
-        if (_state.Library.Targets.Count == 0)
+        if (visibleTargets.Count == 0)
         {
             TargetSwitcher.Children.Add(new TextBlock
             {
@@ -297,7 +334,8 @@ public partial class MainWindow : Window
         try
         {
             var result = await _state.Runner.RunAsync(
-                macro, _state.Library, progress, preferredTargetId: _activeTargetId);
+                macro, _state.Library, progress, preferredTargetId: _activeTargetId,
+                integration: _state.Integration);
             if (!result.Success)
                 Log($"=> 失敗: {result.Error}");
             else

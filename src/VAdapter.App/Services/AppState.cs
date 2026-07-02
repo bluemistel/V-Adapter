@@ -61,7 +61,10 @@ public sealed class AppState : IDisposable
 
         var targets = _targetStore.Load();
         var scripts = _scriptStore.LoadAll();
-        var addedFromScripts = MergeMissing(targets, scripts.EmbeddedTargets);
+        var added = MergeMissing(targets, scripts.EmbeddedTargets);
+        // 同梱テンプレート（default-library.json）の対象アプリも未登録分だけ追加。
+        // → 更新で追加した対象アプリ（A.I.VOICE / COEIROINK v2 等）を既存環境にも配布する。
+        added += MergeMissing(targets, LoadEmbeddedDefault()?.Targets ?? new List<TargetApplication>());
         var macros = scripts.Macros;
 
         if (!initialized)
@@ -77,6 +80,9 @@ public sealed class AppState : IDisposable
                 macros = seed.Macros;
             }
 
+            // 既定は名前の昇順（ユーザーは対象アプリ管理で並び替え可能）。
+            targets = targets.OrderBy(t => t.Name, StringComparer.CurrentCulture).ToList();
+
             var seeded = new MacroLibrary { Targets = targets, Macros = macros };
             // 新レイアウトへ確定（library.json と各 .vamacro を作成）。
             _targetStore.Save(seeded.Targets);
@@ -84,8 +90,8 @@ public sealed class AppState : IDisposable
             return seeded;
         }
 
-        // 更新で新たな組込ターゲットが増えていれば library.json に反映。
-        if (addedFromScripts > 0)
+        // 組込ターゲット・テンプレートが増えていれば library.json に反映。
+        if (added > 0)
             _targetStore.Save(targets);
 
         return new MacroLibrary { Targets = targets, Macros = macros };

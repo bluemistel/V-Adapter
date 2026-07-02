@@ -49,6 +49,34 @@
       "titleIsRegex": false,
       "windowClass": "Chrome_WidgetWin_1",
       "coordinateMode": "Relative"
+    },
+    {
+      "id": "b7e2c1a4d5f6470890a1b2c3d4e5f701",
+      "name": "VOICEROID2",
+      "processName": "VoiceroidEditor",
+      "windowTitlePattern": "VOICEROID2",
+      "titleIsRegex": false,
+      "executablePath": "C:\\Program Files\\AHS\\VOICEROID2\\VoiceroidEditor.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "c3f4a5b6d7e8490a1b2c3d4e5f6a7b02",
+      "name": "A.I.VOICE",
+      "processName": "AIVoiceEditor",
+      "windowTitlePattern": "A.I.VOICE Editor",
+      "titleIsRegex": false,
+      "windowClass": "HwndWrapper[AIVoiceEditor.exe;;c7e8cd3f-6ace-4214-8e62-5b1003209af0]",
+      "executablePath": "C:\\Program Files\\AI\\AIVoice\\AIVoiceEditor\\AIVoiceEditor.exe",
+      "coordinateMode": "Relative"
+    },
+    {
+      "id": "d4a5b6c7e8f9401a2b3c4d5e6f7a8b03",
+      "name": "COEIROINKv2",
+      "processName": "COEIROINKv2",
+      "windowTitlePattern": "coeiroink-v2",
+      "titleIsRegex": false,
+      "windowClass": "Chrome_WidgetWin_1",
+      "coordinateMode": "Relative"
     }
   ],
   "macros": [

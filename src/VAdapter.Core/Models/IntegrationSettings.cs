@@ -48,6 +48,33 @@ public sealed class IntegrationSettings
         _ => ConfigFor(mode)?.EditorPath,
     };
 
+    /// <summary>VOICEROID2（AITalk5系）用オプション（例外処理。既定は無効）。</summary>
+    public Voiceroid2Options Voiceroid2 { get; set; } = new();
+
+    /// <summary>
+    /// VOICEROID2 の保存先フォルダを、キャラクター名とアクティブモードから解決する。
+    /// マクロ動作ベースはキャラの明示フォルダ、AviUtl 系はそのモードの監視フォルダ配列の指定番号。
+    /// 未一致時は AviUtl 系なら先頭監視フォルダ、マクロ動作ベースなら null。
+    /// </summary>
+    public string? ResolveVoiceroid2Folder(IntegrationMode mode, string? characterName)
+    {
+        var map = Voiceroid2.Characters.FirstOrDefault(c =>
+            !string.IsNullOrEmpty(c.Name)
+            && string.Equals(c.Name.Trim(), characterName?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (mode == IntegrationMode.MacroOnly)
+            return string.IsNullOrWhiteSpace(map?.MacroBaseFolder) ? null : map!.MacroBaseFolder;
+
+        var folders = ConfigFor(mode)?.Folders;
+        if (folders is null || folders.Count == 0)
+            return null;
+
+        var index = map?.MonitorFolderIndex ?? 0;
+        if (index < 0 || index >= folders.Count)
+            index = 0; // 番号が範囲外なら先頭へフォールバック。
+        return folders[index].Path;
+    }
+
     /// <summary>
     /// 指定モードに対応する監視/ルーティング設定を返す（MacroOnly は null）。
     /// External は <see cref="ExternalAdapterConfig"/> を基底 <see cref="AviutlDropConfig"/> として返す。
@@ -107,6 +134,33 @@ public sealed class ExternalAdapterConfig : AviutlDropConfig
 
     /// <summary>コマンドの最大実行時間（ミリ秒）。</summary>
     public int TimeoutMs { get; set; } = 15000;
+}
+
+/// <summary>
+/// VOICEROID2（AITalk5系）向けの例外オプション。ファイル命名規則を持たないアプリ向けに、
+/// V-Adapter 側で「保存先＋現在日時_キャラクター名_本文先頭」を組み立てて保存するための設定。
+/// 命令側にフォルダを持たせず、ここへ集約する（組込マクロを編集不要にするため）。
+/// </summary>
+public sealed class Voiceroid2Options
+{
+    /// <summary>この機能を使うか（既定 false）。</summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>キャラクター別の保存先マッピング。</summary>
+    public List<Voiceroid2Character> Characters { get; set; } = new();
+}
+
+/// <summary>VOICEROID2 のキャラクター1件と保存先の対応。</summary>
+public sealed class Voiceroid2Character
+{
+    /// <summary>VOICEROID2 の「キャラ表示エリア」に表示される名称（UI 取得値と照合）。</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>マクロ動作ベース（YMM4 等）のときの明示保存先フォルダ。</summary>
+    public string? MacroBaseFolder { get; set; }
+
+    /// <summary>AviUtl / AviUtl2 / External のとき、そのモードの監視フォルダ配列の何番目へ保存するか。</summary>
+    public int MonitorFolderIndex { get; set; }
 }
 
 /// <summary>監視対象フォルダ。</summary>

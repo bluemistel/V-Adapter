@@ -12,6 +12,10 @@
             <Button Width="90" Content="キャンセル" IsCancel="True"/>
         </StackPanel>
 
+        <!-- 内容が縦に増えても隠れないようスクロール可能にする -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+
         <!-- 連携環境セレクタ -->
         <Border DockPanel.Dock="Top" Background="{StaticResource B.Surface}" CornerRadius="8"
                 BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
@@ -53,6 +57,36 @@
             </StackPanel>
         </Border>
 
+        <!-- VOICEROID2 (AITalk5系) オプション（上級・既定OFF・全モード共通） -->
+        <Expander x:Name="Voiceroid2Expander" DockPanel.Dock="Top" Margin="0,0,0,12"
+                  Header="VOICEROID2 (AITalk5系) オプション（上級・既定OFF）">
+            <Border Background="{StaticResource B.Surface}" CornerRadius="8" BorderBrush="{StaticResource B.Border}"
+                    BorderThickness="1" Padding="12" Margin="0,6,0,0">
+                <StackPanel>
+                    <CheckBox x:Name="V2EnableCheck" Content="VOICEROID2 の保存先解決を有効にする" Margin="0,0,0,6"/>
+                    <TextBlock FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap" Margin="0,0,0,8"
+                               Text="ファイル命名規則を持たない VOICEROID2 等で使用します。組込マクロ「音声の保存（VOICEROID2）」を使う場合、ここにキャラクターと保存先を登録するだけで動作します（マクロ編集は不要）。マクロ動作ベースは明示フォルダ、AviUtl/AviUtl2 はそのモードの監視フォルダ番号（0起点）を使います。"/>
+                    <DockPanel Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="行を追加" Width="80" Margin="0,0,6,0" Click="OnV2AddChar"/>
+                            <Button Content="保存先を参照…" Width="110" Margin="0,0,6,0" Click="OnV2BrowseFolder"/>
+                            <Button Content="削除" Width="60" Click="OnV2RemoveChar"/>
+                        </StackPanel>
+                        <TextBlock Text="キャラクター別 保存先" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <DataGrid x:Name="V2Grid" AutoGenerateColumns="False" CanUserAddRows="False" HeadersVisibility="Column"
+                              MaxHeight="150" GridLinesVisibility="Horizontal" RowHeight="26" Background="Transparent"
+                              BorderThickness="1" BorderBrush="{StaticResource B.Border}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="キャラクター名（UI表示名）" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="マクロ動作ベース保存先" Binding="{Binding MacroBaseFolder}" Width="2*"/>
+                            <DataGridTextColumn Header="監視フォルダ番号" Binding="{Binding MonitorFolderIndex}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </Expander>
+
         <!-- マクロ動作ベースの説明 -->
         <Border x:Name="MacroOnlyPanel" DockPanel.Dock="Top" Background="{StaticResource B.HoverBg}"
                 CornerRadius="8" BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="16"
@@ -84,7 +118,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*" MinHeight="170"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -153,7 +187,7 @@
             </Grid>
 
             <!-- 話者ルール -->
-            <Border Grid.Row="2" MinHeight="150" Background="{StaticResource B.Surface}" CornerRadius="8"
+            <Border Grid.Row="2" Height="220" Background="{StaticResource B.Surface}" CornerRadius="8"
                     BorderBrush="{StaticResource B.Border}" BorderThickness="1" Padding="10" Margin="0,0,0,10">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,4">
@@ -193,5 +227,7 @@
                 </DockPanel>
             </Border>
         </Grid>
+        </StackPanel>
+        </ScrollViewer>
     </DockPanel>
 </Window>

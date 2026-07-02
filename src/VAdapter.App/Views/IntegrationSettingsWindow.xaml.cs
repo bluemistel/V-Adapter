@@ -24,6 +24,7 @@ public partial class IntegrationSettingsWindow : Window
     private AviutlDropConfig? _currentConfig;
     private readonly ObservableCollection<FolderRow> _folders = new();
     private readonly ObservableCollection<SpeakerRule> _rules = new();
+    private readonly ObservableCollection<Voiceroid2Character> _v2chars = new();
     private bool _initializing;
 
     public IntegrationSettingsWindow(AppState state)
@@ -34,6 +35,12 @@ public partial class IntegrationSettingsWindow : Window
 
         FolderList.ItemsSource = _folders;
         RulesGrid.ItemsSource = _rules;
+
+        // VOICEROID2 オプション（全モード共通）
+        V2EnableCheck.IsChecked = _working.Voiceroid2.Enabled;
+        foreach (var c in _working.Voiceroid2.Characters)
+            _v2chars.Add(c);
+        V2Grid.ItemsSource = _v2chars;
 
         _state.DropService.Log += OnServiceLog;
         Closed += (_, _) => _state.DropService.Log -= OnServiceLog;
@@ -131,6 +138,11 @@ public partial class IntegrationSettingsWindow : Window
             _working.MacroEditorPath = editor;
         else if (_currentConfig is not null)
             _currentConfig.EditorPath = editor;
+
+        // VOICEROID2 オプション（全モード共通）もモードに依らず確定。
+        V2Grid.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
+        _working.Voiceroid2.Enabled = V2EnableCheck.IsChecked == true;
+        _working.Voiceroid2.Characters = _v2chars.ToList();
 
         if (_currentConfig is null)
             return;
@@ -308,6 +320,36 @@ public partial class IntegrationSettingsWindow : Window
         AppendLog(result.Success
             ? (result.AlreadyRunning ? "起動テスト: 既に起動しています。" : "起動テスト: 起動しました。")
             : $"起動テスト失敗: {result.Error}");
+    }
+
+    // --- VOICEROID2 オプション ---
+
+    private void OnV2AddChar(object sender, RoutedEventArgs e)
+    {
+        var c = new Voiceroid2Character { Name = "", MonitorFolderIndex = 0 };
+        _v2chars.Add(c);
+        V2Grid.SelectedItem = c;
+    }
+
+    private void OnV2RemoveChar(object sender, RoutedEventArgs e)
+    {
+        if (V2Grid.SelectedItem is Voiceroid2Character c)
+            _v2chars.Remove(c);
+    }
+
+    private void OnV2BrowseFolder(object sender, RoutedEventArgs e)
+    {
+        if (V2Grid.SelectedItem is not Voiceroid2Character c)
+        {
+            AppendLog("VOICEROID2: 保存先を設定する行を選択してください。");
+            return;
+        }
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "マクロ動作ベース時の保存先フォルダを選択" };
+        if (dialog.ShowDialog(this) == true)
+        {
+            c.MacroBaseFolder = dialog.FolderName;
+            V2Grid.Items.Refresh();
+        }
     }
 
     private static int ParseOr(string? text, int fallback) =>

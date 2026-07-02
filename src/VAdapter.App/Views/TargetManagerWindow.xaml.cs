@@ -55,6 +55,7 @@ public partial class TargetManagerWindow : Window
             {
                 NameBox.Text = ProcessBox.Text = TitleBox.Text = ClassBox.Text = ExePathBox.Text = string.Empty;
                 RegexCheck.IsChecked = false;
+                HideFromSendCheck.IsChecked = false;
                 CoordCombo.SelectedIndex = 0;
                 return;
             }
@@ -65,6 +66,7 @@ public partial class TargetManagerWindow : Window
             ClassBox.Text = target.WindowClass ?? string.Empty;
             ExePathBox.Text = target.ExecutablePath ?? string.Empty;
             RegexCheck.IsChecked = target.TitleIsRegex;
+            HideFromSendCheck.IsChecked = target.HideFromSendTargets;
             CoordCombo.SelectedIndex = target.CoordinateMode == CoordinateMode.Absolute ? 1 : 0;
         }
         finally
@@ -84,12 +86,42 @@ public partial class TargetManagerWindow : Window
         _current.WindowClass = NullIfEmpty(ClassBox.Text);
         _current.ExecutablePath = NullIfEmpty(ExePathBox.Text);
         _current.TitleIsRegex = RegexCheck.IsChecked == true;
+        _current.HideFromSendTargets = HideFromSendCheck.IsChecked == true;
         _current.CoordinateMode = (CoordCombo.SelectedItem as ComboBoxItem)?.Tag as string == "Absolute"
             ? CoordinateMode.Absolute
             : CoordinateMode.Relative;
 
         // 一覧の表示名を最新化（ItemsSource の入れ替えはせず選択を保つ）。
         TargetList.Items.Refresh();
+    }
+
+    // --- 並び替え ---
+
+    private void OnMoveUp(object sender, RoutedEventArgs e) => MoveSelected(-1);
+
+    private void OnMoveDown(object sender, RoutedEventArgs e) => MoveSelected(+1);
+
+    private void MoveSelected(int delta)
+    {
+        var index = TargetList.SelectedIndex;
+        var newIndex = index + delta;
+        if (index < 0 || newIndex < 0 || newIndex >= _working.Count)
+            return;
+        _working.Move(index, newIndex);
+        TargetList.SelectedIndex = newIndex;
+        _dirty = true;
+    }
+
+    private void OnSortByName(object sender, RoutedEventArgs e)
+    {
+        ApplyToCurrent();
+        var cur = _current;
+        var sorted = _working.OrderBy(t => t.Name, StringComparer.CurrentCulture).ToList();
+        _working.Clear();
+        foreach (var t in sorted)
+            _working.Add(t);
+        TargetList.SelectedItem = cur;
+        _dirty = true;
     }
 
     /// <summary>編集フィールドが変更されたら未保存フラグを立てる（プログラムによる読込中は無視）。</summary>

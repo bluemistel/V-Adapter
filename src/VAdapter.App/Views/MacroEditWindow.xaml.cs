@@ -28,8 +28,11 @@ public partial class MacroEditWindow : Window
         NameBox.Text = _working.Name;
         UpdateShortcutText();
 
+        // 左の対象アプリ（スクリプト）は名前の昇順で表示。ユーザーは ↑↓ で並び替え可能。
         _scriptRows = new ObservableCollection<ScriptRow>(
-            _working.Scripts.Select(s => new ScriptRow(s, _library)));
+            _working.Scripts
+                .OrderBy(s => _library.FindTarget(s.TargetApplicationId)?.Name ?? "", StringComparer.CurrentCulture)
+                .Select(s => new ScriptRow(s, _library)));
         ScriptList.ItemsSource = _scriptRows;
 
         if (_scriptRows.Count > 0)
@@ -96,7 +99,7 @@ public partial class MacroEditWindow : Window
         if (!usedIds.Contains(null))
             menu.Items.Add(BuildScriptMenuItem("共通（対象アプリなし）", null));
 
-        foreach (var target in _library.Targets)
+        foreach (var target in _library.Targets.OrderBy(t => t.Name, StringComparer.CurrentCulture))
         {
             if (usedIds.Contains(target.Id))
                 continue;
@@ -137,6 +140,20 @@ public partial class MacroEditWindow : Window
         _scriptRows.Remove(row);
     }
 
+    private void OnMoveScriptUp(object sender, RoutedEventArgs e) => MoveScript(-1);
+
+    private void OnMoveScriptDown(object sender, RoutedEventArgs e) => MoveScript(+1);
+
+    private void MoveScript(int delta)
+    {
+        var index = ScriptList.SelectedIndex;
+        var newIndex = index + delta;
+        if (index < 0 || newIndex < 0 || newIndex >= _scriptRows.Count)
+            return;
+        _scriptRows.Move(index, newIndex);
+        ScriptList.SelectedIndex = newIndex;
+    }
+
     // --- 命令の追加・編集・並べ替え ---
 
     private void OnAddClick(object sender, RoutedEventArgs e)
@@ -166,6 +183,9 @@ public partial class MacroEditWindow : Window
             SwitchTargetInstruction.KindId => new SwitchTargetInstruction(),
             WaitForTextInstruction.KindId => new WaitForTextInstruction(),
             LaunchAppInstruction.KindId => new LaunchAppInstruction(),
+            ReadUiTextInstruction.KindId => new ReadUiTextInstruction(),
+            SetSaveFileNameInstruction.KindId => new SetSaveFileNameInstruction(),
+            WriteSubtitleInstruction.KindId => new WriteSubtitleInstruction(),
             _ => throw new InvalidOperationException($"未知の命令種別: {kind}"),
         };
 

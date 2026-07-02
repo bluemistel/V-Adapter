@@ -22,6 +22,8 @@
     <SolidColorBrush x:Key="B.HoverBg" Color="#FFF6F7FA"/>
     <SolidColorBrush x:Key="B.Danger" Color="#FFD26060"/>
     <SolidColorBrush x:Key="B.DangerHover" Color="#FFFAE5E5"/>
+    <SolidColorBrush x:Key="B.Success" Color="#FF3AA76A"/>
+    <SolidColorBrush x:Key="B.SuccessHover" Color="#FF2F8F59"/>
     <SolidColorBrush x:Key="B.CheckUnchecked" Color="#FFC8CDD7"/>
     <SolidColorBrush x:Key="B.ScrollThumb" Color="#FFC8CDD7"/>
 
@@ -109,6 +111,34 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.PrimaryHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 実行（緑） -->
+    <Style x:Key="SuccessButton" TargetType="{x:Type Button}">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{StaticResource B.Success}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="15,7"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                            Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.SuccessHover}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5"/>

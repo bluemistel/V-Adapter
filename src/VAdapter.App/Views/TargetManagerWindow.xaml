@@ -15,6 +15,11 @@
                 <Button Content="新規" Width="70" Margin="0,0,6,0" Click="OnNew"/>
                 <Button Content="削除" Width="70" Click="OnDelete"/>
             </StackPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
+                <Button Content="↑" Width="40" Margin="0,0,6,0" Click="OnMoveUp" ToolTip="上へ（優先順位を上げる）"/>
+                <Button Content="↓" Width="40" Margin="0,0,6,0" Click="OnMoveDown" ToolTip="下へ"/>
+                <Button Content="名前順" Width="70" Click="OnSortByName" ToolTip="名前の昇順で並べ替え"/>
+            </StackPanel>
             <ListBox x:Name="TargetList" DisplayMemberPath="Name"
                      SelectionChanged="OnSelectionChanged"/>
         </DockPanel>
@@ -30,7 +35,13 @@
 
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel x:Name="EditorPanel" IsEnabled="False" Margin="0,0,8,0">
-                    <TextBlock Text="表示名" Margin="0,0,0,2"/>
+
+                    <TextBlock Text="メイン画面右の「送信先」からこのアプリを隠します。"
+                               Foreground="Gray" TextWrapping="Wrap" FontSize="11" Margin="0,0,0,2"/>
+                    <CheckBox x:Name="HideFromSendCheck" Content="送信先の一覧に表示しない" Margin="0,14,0,0"
+                              Checked="OnEditorChanged" Unchecked="OnEditorChanged"/>
+
+                    <TextBlock Text="表示名" Margin="0,8,0,2"/>
                     <TextBox x:Name="NameBox" Margin="0,0,0,10" TextChanged="OnEditorChanged"/>
 
                     <Button Content="実行中ウィンドウから取得…" Width="220" HorizontalAlignment="Left"
@@ -61,6 +72,7 @@
                         <ComboBoxItem Content="相対（ウィンドウ左上基準）" Tag="Relative"/>
                         <ComboBoxItem Content="絶対（ディスプレイ基準）" Tag="Absolute"/>
                     </ComboBox>
+
                 </StackPanel>
             </ScrollViewer>
         </DockPanel>

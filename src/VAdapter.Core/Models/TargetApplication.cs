@@ -31,4 +31,7 @@ public sealed class TargetApplication
 
     /// <summary>このアプリに対するクリック座標の既定の解釈方法。</summary>
     public CoordinateMode CoordinateMode { get; set; } = CoordinateMode.Relative;
+
+    /// <summary>メイン画面の「送信先」一覧に表示しない（対象アプリが増えたときの整理用）。</summary>
+    public bool HideFromSendTargets { get; set; }
 }

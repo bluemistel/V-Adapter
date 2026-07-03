@@ -15,6 +15,8 @@
 VOICEVOX / A.I.VOICE2 / CeVIO AI / VOICEPEAK / VoiSona Talk … 合成音声ソフトは各社で UI・ショートカットがバラバラで、複数音源を併用すると操作を覚え直す負担が大きくなります。
 **V-Adapter** は「音声の再生」「音声の保存」といった*ユーザー視点の操作*に統一ショートカットを割り当て、その内部を*アプリごとの簡易マクロ*として実行することで、操作体系を統一します。
 
+#### [ダウンロードはこちらから](https://github.com/bluemistel/V-Adapter/releases)
+
 ---
 
 ## 特長

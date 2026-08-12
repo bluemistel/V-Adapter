@@ -281,6 +281,11 @@
               "id": "ccc836fb8a5e4dd0b23aa288c78fbea7"
             },
             {
+              "kind": "wait",
+              "durationMs": 750,
+              "id": "f7c2a91d3b6e4d0a8a51c47e29d8b410"
+            },
+            {
               "kind": "sendkeys",
               "keyCombination": {
                 "modifiers": "None",

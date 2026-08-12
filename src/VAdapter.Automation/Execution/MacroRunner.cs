@@ -171,7 +171,7 @@ public sealed class MacroRunner
         return instruction switch
         {
             WaitInstruction wait => await ExecuteWait(wait, ct),
-            SendKeysInstruction keys => ExecuteSendKeys(keys, ctx),
+            SendKeysInstruction keys => ExecuteSendKeys(keys, ctx, log),
             ClickInstruction click => ExecuteClick(click, ctx),
             WaitForWindowInstruction waitWin => await ExecuteWaitForWindow(waitWin, target, ct),
             WaitForActivationInstruction waitAct => await ExecuteWaitForActivation(waitAct, target, ct),
@@ -301,14 +301,36 @@ public sealed class MacroRunner
         return MacroRunResult.Ok();
     }
 
-    private MacroRunResult ExecuteSendKeys(SendKeysInstruction keys, RunContext ctx)
+    private MacroRunResult ExecuteSendKeys(SendKeysInstruction keys, RunContext ctx, IProgress<string>? log)
     {
         if (!keys.KeyCombination.IsValid)
             return MacroRunResult.Fail("キーが未設定です。", keys);
 
         BringInputForeground(ctx);
-        _input.SendKeyCombination(keys.KeyCombination);
+        var result = _input.SendKeyCombination(keys.KeyCombination);
+        if (!result.AllSent)
+        {
+            // UIPI（対象アプリのみ管理者実行）やフック干渉の切り分け用。エラー 5 は権限差の典型。
+            log?.Report($"    警告: キー送信が完了しませんでした（{result.Sent}/{result.Requested} 件送信, Win32エラー {result.LastError}, 前面: {DescribeForegroundWindow()}）。"
+                        + " 対象アプリを管理者として実行している場合は、V-Adapter も管理者として実行してください。");
+        }
         return MacroRunResult.Ok();
+    }
+
+    /// <summary>診断ログ用: 現在の前面ウィンドウのプロセス名（取得不可ならハンドル値）。</summary>
+    private static string DescribeForegroundWindow()
+    {
+        var hWnd = NativeMethods.GetForegroundWindow();
+        NativeMethods.GetWindowThreadProcessId(hWnd, out var pid);
+        try
+        {
+            if (pid != 0)
+                return System.Diagnostics.Process.GetProcessById((int)pid).ProcessName;
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+        }
+        return $"0x{hWnd:X}";
     }
 
     private MacroRunResult ExecuteClick(ClickInstruction click, RunContext ctx)

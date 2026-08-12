@@ -22,28 +22,57 @@ public sealed class InputSender
         SendMouse(up);
     }
 
+    /// <summary>修飾キー押下後の猶予（ms）。対象アプリが「押しっぱなし」を観測できるようにする。</summary>
+    private const int ModifierSettleMs = 30;
+
+    /// <summary>主キーの押下から解放までの保持時間（ms）。</summary>
+    private const int KeyHoldMs = 20;
+
     /// <summary>修飾キー押下 → 主キー押下/解放 → 修飾キー解放 の順でキー組み合わせを送信する。</summary>
-    public void SendKeyCombination(KeyCombination combo)
+    public InputSendResult SendKeyCombination(KeyCombination combo)
     {
         if (!combo.IsValid)
-            return;
+            return new InputSendResult(0, 0, 0);
 
         var modifiers = ModifierVks(combo.Modifiers).ToList();
-        var inputs = new List<NativeMethods.INPUT>(modifiers.Count * 2 + 2);
 
-        // 修飾キー押下（順方向）
-        foreach (var vk in modifiers)
-            inputs.Add(KeyInput(vk, keyUp: false));
+        // 1 回の SendInput にまとめず、押下・主キー・解放を別々に送って間に待機を挟む。
+        // JUCE 製アプリ（VOICEPEAK 等）は修飾キーの状態を GetAsyncKeyState（リアルタイム）で読むため、
+        // まとめて送ると対象アプリが主キーを処理する前に修飾キーの解放が届き、組み合わせが成立しない。
+        // 実機の速度・負荷で成否が変わる（＝環境によって動いたり動かなかったりする）のもこれが理由。
+        uint requested = 0, sent = 0;
+        int lastError = 0;
 
-        // 主キー押下・解放
-        inputs.Add(KeyInput((ushort)combo.VirtualKey, keyUp: false));
-        inputs.Add(KeyInput((ushort)combo.VirtualKey, keyUp: true));
+        void Step(params NativeMethods.INPUT[] inputs)
+        {
+            var r = Send(inputs);
+            requested += r.Requested;
+            sent += r.Sent;
+            if (!r.AllSent && lastError == 0)
+                lastError = r.LastError;
+        }
 
-        // 修飾キー解放（逆順）
-        for (int i = modifiers.Count - 1; i >= 0; i--)
-            inputs.Add(KeyInput(modifiers[i], keyUp: true));
+        if (modifiers.Count > 0)
+        {
+            Step(modifiers.Select(vk => KeyInput(vk, keyUp: false)).ToArray());
+            Thread.Sleep(ModifierSettleMs);
+        }
 
-        Send(inputs.ToArray());
+        Step(KeyInput((ushort)combo.VirtualKey, keyUp: false));
+        Thread.Sleep(KeyHoldMs);
+        Step(KeyInput((ushort)combo.VirtualKey, keyUp: true));
+
+        if (modifiers.Count > 0)
+        {
+            // 解放も主キー処理の完了を待ってから（逆順）。
+            Thread.Sleep(ModifierSettleMs);
+            var ups = new NativeMethods.INPUT[modifiers.Count];
+            for (int i = 0; i < modifiers.Count; i++)
+                ups[i] = KeyInput(modifiers[modifiers.Count - 1 - i], keyUp: true);
+            Step(ups);
+        }
+
+        return new InputSendResult(requested, sent, lastError);
     }
 
     private static IEnumerable<ushort> ModifierVks(KeyModifiers modifiers)
@@ -124,9 +153,20 @@ public sealed class InputSender
         Send(new[] { input });
     }
 
-    private static void Send(NativeMethods.INPUT[] inputs)
+    private static InputSendResult Send(NativeMethods.INPUT[] inputs)
     {
         int size = System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.INPUT>();
-        NativeMethods.SendInput((uint)inputs.Length, inputs, size);
+        uint sent = NativeMethods.SendInput((uint)inputs.Length, inputs, size);
+        int lastError = sent == inputs.Length ? 0 : System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+        return new InputSendResult((uint)inputs.Length, sent, lastError);
     }
+}
+
+/// <summary>
+/// SendInput の送信結果。UIPI（対象アプリのみ管理者実行）やフック干渉でキーが破棄されると
+/// Sent が Requested を下回る（Win32 エラー 5 = アクセス拒否は権限差の典型）。
+/// </summary>
+public readonly record struct InputSendResult(uint Requested, uint Sent, int LastError)
+{
+    public bool AllSent => Sent == Requested;
 }

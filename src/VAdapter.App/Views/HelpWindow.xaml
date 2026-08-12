@@ -29,7 +29,7 @@
                         <TextBlock Text="V-Adapter" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Border VerticalAlignment="Center" Margin="6,2,0,0" Background="{StaticResource B.Accent}"
                                 CornerRadius="999" Padding="6,1">
-                            <TextBlock Text="v0.0.4 α" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
+                            <TextBlock Text="v0.0.5 α" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
                         </Border>
                     </StackPanel>
                     <ListBox x:Name="MenuList" Background="Transparent" BorderThickness="0" Margin="6,0,6,6"
@@ -133,7 +133,12 @@
                     <StackPanel x:Name="SecChangelog" Visibility="Collapsed">
                         <TextBlock Text="更新履歴" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.5 (α)</Run><LineBreak/>
+                            ・VOICEPEAK、VoiSona Talkにおいて、Ctrl Shift を使った修飾キー付きショートカットが環境によって効かない問題を修正<LineBreak/>
+                            ・組込マクロ「音声の保存」の VOICEPEAK 用スクリプトに、アプリ切替後の待機を追加<LineBreak/>
+                            ・キー送信の診断ログを追加（送信できなかった場合に件数・エラー・前面ウィンドウを表示）<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.4 (α)</Run><LineBreak/>
+                            ・初回起動時に対象アプリ「A.I.VOICE」「COEIROINKv2」が2つ登録される問題を修正<LineBreak/>
                             ・VOICEROID2（AITalk5系）に対応。UIから情報取得／保存ファイル名の書き換え／字幕テキストの書き出し 命令を追加<LineBreak/>
                             ・連携設定に「VOICEROID2 (AITalk5系) オプション」（キャラ別の保存先）を追加。組込マクロ「音声の保存（VOICEROID2）」を同梱<LineBreak/>
                             ・対象アプリを追加：VOICEROID2 / A.I.VOICE / COEIROINK v2。標準マクロ（再生・保存）を更新<LineBreak/>

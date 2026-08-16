@@ -4,13 +4,13 @@
 
 **合成音声ソフトの操作を、統一ショートカットから半自動化する Windows デスクトップ向けマクロツール**
 
-[![version](https://img.shields.io/badge/version-0.0.6%20(alpha)-blue)](https://github.com/bluemistel/V-Adapter/releases)
+[![version](https://img.shields.io/badge/version-0.0.6%20(beta)-blue)](https://github.com/bluemistel/V-Adapter/releases)
 [![platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6)](https://github.com/bluemistel/V-Adapter)
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
 
 </div>
 
-> ⚠️ 本バージョンは ** α版 ** です。仕様は予告なく変更される場合があります。
+> ⚠️ 本バージョンは ** β版 ** です。仕様は予告なく変更される場合があります。
 
 VOICEVOX / A.I.VOICE2 / CeVIO AI / VOICEPEAK / VoiSona Talk … 合成音声ソフトは各社で UI・ショートカットがバラバラで、複数音源を併用すると操作を覚え直す負担が大きくなります。
 **V-Adapter** は「音声の再生」「音声の保存」といった*ユーザー視点の操作*に統一ショートカットを割り当て、その内部を*アプリごとの簡易マクロ*として実行することで、操作体系を統一します。

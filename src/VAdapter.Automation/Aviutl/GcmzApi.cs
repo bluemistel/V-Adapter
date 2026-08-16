@@ -69,6 +69,7 @@ public sealed class GcmzApi
                 VideoScale = videoScale,
                 ApiVersion = apiVer,
                 ProjectPath = projectPath,
+                ProcessName = ProcessNameOf(hwnd),
             };
         }
         finally
@@ -142,6 +143,24 @@ public sealed class GcmzApi
             if (mutexAcquired)
                 NativeMethods.ReleaseMutex(mutexHandle);
             NativeMethods.CloseHandle(mutexHandle);
+        }
+    }
+
+    /// <summary>ウィンドウを所有するプロセス名（拡張子なし）。取得不可なら空。</summary>
+    private static string ProcessNameOf(IntPtr hWnd)
+    {
+        try
+        {
+            if (hWnd == IntPtr.Zero)
+                return string.Empty;
+            NativeMethods.GetWindowThreadProcessId(hWnd, out var pid);
+            if (pid == 0)
+                return string.Empty;
+            return System.Diagnostics.Process.GetProcessById((int)pid).ProcessName;
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return string.Empty;
         }
     }
 

@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     public MainWindow(AppState state)
     {
         InitializeComponent();
+        VersionBadge.Text = UpdateService.DisplayVersion;
         _state = state;
         MacroList.ItemsSource = _rows;
         ReloadRows();

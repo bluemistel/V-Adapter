@@ -199,7 +199,7 @@
                     </DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" FontSize="11" Foreground="{StaticResource B.TextMuted}"
                                TextWrapping="Wrap"
-                               Text="「行を追加」で _話者_ / -話者- を抽出する既定パターンが入ります。話者名を空にするとパターンの( )内を話者名として抽出します。特定話者を別レイヤーにしたい場合は、その話者用の行を上に追加してください（上から順に評価）。"/>
+                               Text="「行を追加」で _話者_ / -話者- を抽出する既定パターンが入ります。話者名を空にすると、パターンの( )内を話者名として抽出し、すべての話者が同じレイヤーに入ります。話者ごとにレイヤーを分けたい場合は、既定パターンのまま行を追加して話者名を入力してください（その話者のファイルだけがその行に一致します）。上から順に評価します。"/>
                     <DataGrid x:Name="RulesGrid" AutoGenerateColumns="False" CanUserAddRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="26"
                               Background="Transparent" BorderThickness="0">

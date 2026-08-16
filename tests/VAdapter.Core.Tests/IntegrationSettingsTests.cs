@@ -125,6 +125,67 @@ public class IntegrationSettingsTests
         Assert.Equal(expectedSpeaker, route.Speaker);
     }
 
+    [Theory]
+    [InlineData("4-星界-セリフ-プロジェクト名称.wav", 9, "星界")]
+    [InlineData("3-IA-セリフ-プロジェクト名称.wav", 6, "IA")]
+    [InlineData("5-その他-セリフ-プロジェクト名称.wav", 1, null)] // どの話者名にも一致せず既定レイヤー
+    public void Resolve_SameDefaultPatternRows_RouteByTheirSpeakerName(
+        string fileName, int expectedLayer, string? expectedSpeaker)
+    {
+        // 既定パターン（どの話者にも一致）を複数行に並べ、話者名だけを変えたケース。
+        // 話者名が一致しない行は飛ばし、その話者の行のレイヤーが使われること。
+        var config = new AviutlDropConfig { DefaultLayer = 1 };
+        config.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.DefaultNamePattern, SpeakerName = "IA", Layer = 6 });
+        config.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.DefaultNamePattern, SpeakerName = "星界", Layer = 9 });
+
+        var route = DropRouting.Resolve(fileName, config);
+
+        Assert.Equal(expectedLayer, route.Layer);
+        Assert.Equal(expectedSpeaker, route.Speaker);
+    }
+
+    [Fact]
+    public void Resolve_ReportedCase_SeikaiGoesToItsOwnLayer()
+    {
+        // 報告された設定そのまま（既定パターン2行・IA=6 / 星界=8）。
+        // 「星界」のファイルで先頭行(IA)のレイヤー6が採用されてしまう不具合の回帰テスト。
+        var config = new AviutlDropConfig { DefaultLayer = 1 };
+        config.Rules.Add(new SpeakerRule { NamePattern = @"^[^_\-]*[_\-](.+?)[_\-]", SpeakerName = "IA", Layer = 6 });
+        config.Rules.Add(new SpeakerRule { NamePattern = @"^[^_\-]*[_\-](.+?)[_\-]", SpeakerName = "星界", Layer = 8 });
+
+        var route = DropRouting.Resolve("4-星界-セリフ-プロジェクト名称.wav", config);
+
+        Assert.Equal(8, route.Layer);
+        Assert.Equal("星界", route.Speaker);
+    }
+
+    [Fact]
+    public void Resolve_SpeakerNameIsLabel_WhenPatternHasNoCaptureGroup()
+    {
+        // パターン自体が特定話者専用（キャプチャ無し）なら、話者名は表示用ラベル扱い（従来動作）。
+        var config = new AviutlDropConfig { DefaultLayer = 1 };
+        config.Rules.Add(new SpeakerRule { NamePattern = "_ずんだもん_", SpeakerName = "ずんだもん（ノーマル）", Layer = 5 });
+
+        var route = DropRouting.Resolve("0001_ずんだもん_こんにちは.wav", config);
+
+        Assert.Equal(5, route.Layer);
+        Assert.Equal("ずんだもん（ノーマル）", route.Speaker);
+    }
+
+    [Fact]
+    public void Resolve_FallsThroughToGenericRow_WhenSpeakerNameDoesNotMatch()
+    {
+        // 特定話者の行 → 話者名なしの総受け行、という並びが機能すること。
+        var config = new AviutlDropConfig { DefaultLayer = 1 };
+        config.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.DefaultNamePattern, SpeakerName = "星界", Layer = 9 });
+        config.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.DefaultNamePattern, SpeakerName = "", Layer = 2 });
+
+        var route = DropRouting.Resolve("7-IA-セリフ.wav", config);
+
+        Assert.Equal(2, route.Layer);
+        Assert.Equal("IA", route.Speaker);
+    }
+
     [Fact]
     public void Resolve_SkipsDisabledAndInvalidRules()
     {

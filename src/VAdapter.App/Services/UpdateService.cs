@@ -37,6 +37,25 @@ public sealed class UpdateService
     public static Version CurrentVersion() =>
         Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
 
+    /// <summary>
+    /// 画面表示用のバージョン文字列（例: "v0.0.5 α"）。
+    /// csproj の &lt;Version&gt; から自動生成するため、画面ごとに書き分けて食い違うことがない。
+    /// α 表記は InformationalVersion（例 "0.0.5-alpha"）にプレリリース識別子がある場合のみ付ける。
+    /// </summary>
+    public static string DisplayVersion
+    {
+        get
+        {
+            var v = CurrentVersion();
+            var informational = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
+            var suffix = informational.Contains("alpha", StringComparison.OrdinalIgnoreCase) ? " α"
+                : informational.Contains("beta", StringComparison.OrdinalIgnoreCase) ? " β"
+                : "";
+            return $"v{v.Major}.{v.Minor}.{v.Build}{suffix}";
+        }
+    }
+
     /// <summary>タグ一覧を取得して更新有無を判定する。失敗時は null。</summary>
     public async Task<UpdateResult?> CheckAsync(CancellationToken ct = default)
     {

@@ -22,6 +22,13 @@ public sealed class GcmzInfo
     /// <summary>編集中プロジェクトのパス（無い場合は空）。</summary>
     public string ProjectPath { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 接続先ウィンドウのプロセス名（拡張子なし。例: aviutl / aviutl2）。取得不可なら空。
+    /// ミューテックス・共有メモリ名は AviUtl 無印と AviUtl2 で共通のため、
+    /// 両方を起動していると意図しない方へ接続することがある。その検出に使う。
+    /// </summary>
+    public string ProcessName { get; init; } = string.Empty;
+
     /// <summary>プロジェクトが読み込まれているか（解像度が有効か）。</summary>
     public bool HasProject => Width > 0 && Height > 0;
 }

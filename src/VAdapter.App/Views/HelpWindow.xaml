@@ -29,7 +29,7 @@
                         <TextBlock Text="V-Adapter" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Border VerticalAlignment="Center" Margin="6,2,0,0" Background="{StaticResource B.Accent}"
                                 CornerRadius="999" Padding="6,1">
-                            <TextBlock Text="v0.0.5 α" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
+                            <TextBlock x:Name="VersionBadge" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}"/>
                         </Border>
                     </StackPanel>
                     <ListBox x:Name="MenuList" Background="Transparent" BorderThickness="0" Margin="6,0,6,6"
@@ -54,7 +54,7 @@
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">1. 対象アプリを登録</Run><LineBreak/>
                             「対象アプリ管理」を開き、合成音声ソフトを登録します。「実行中ウィンドウから取得」で起動中のアプリを選ぶと簡単です。座標モード（相対／絶対）を選べます。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">2. マクロを実行</Run><LineBreak/>
-                            一覧でマクロを選んで「実行」、または設定したショートカットで起動します。標準マクロ：音声の再生（Ctrl+Space）／音声の保存（Ctrl+E）。<LineBreak/><LineBreak/>
+                            一覧でマクロを選んで「実行」、または設定したショートカットで起動します。標準マクロ：音声の再生（Ctrl+Q）／音声の保存（Ctrl+R）。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">3. 送信先を固定（任意）</Run><LineBreak/>
                             複数の合成音声ソフトを同時起動しているときは、右の「送信先」で送信先アプリを固定できます。未選択時は前面のアプリを自動判定します。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">4. マクロを編集</Run><LineBreak/>
@@ -72,6 +72,20 @@
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,12"
                                    Text="合成音声ソフトが書き出した「同名の wav + txt」を、ごちゃまぜドロップス（GCMZDrops / AviUtl2 は GCMZDrops2）の外部連携API経由で AviUtl / AviUtl2 のタイムラインへ自動投入します。字幕・口パク等の生成は PSDToolKit / PSDToolKit2 が担います。設定は失敗しやすいので、下記の順に確認してください。"/>
 
+                        <!-- 画像付き手順（Wiki）への導線 -->
+                        <Border Background="{StaticResource B.Accent}" BorderBrush="{StaticResource B.Primary}" BorderThickness="1"
+                                CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,10">
+                                    <Run FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}">画像つきの詳しい手順は Wiki をご覧ください</Run><LineBreak/>
+                                    設定画面のスクリーンショット付きで、どこをどう設定するかを確認できます。
+                                </TextBlock>
+                                <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="OnOpenAviutlWiki">
+                                    <TextBlock Text="AviUtl・AviUtl2 連携の手順を開く（ブラウザ）" Foreground="White"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
                         <!-- A 事前準備 -->
                         <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
                                 CornerRadius="6" Padding="14" Margin="0,0,0,10">
@@ -87,10 +101,16 @@
                         <Border Background="{StaticResource B.Accent}" BorderBrush="{StaticResource B.Primary}" BorderThickness="1"
                                 CornerRadius="6" Padding="14" Margin="0,0,0,10">
                             <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}">B. PSDToolKit 環境設定 ＞ 発動条件（最重要）</Run><LineBreak/>
-                                「*.wav ファイルドロップ拡張」→「発動条件」で<LineBreak/>
-                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">☑「同じ名前の *.wav と *.txt を一緒にドロップした時」</Run> を有効にします。<LineBreak/>
-                                ・V-Adapter は wav と txt を一緒に投げるため、この条件で口パク準備・字幕準備等が生成されます。<LineBreak/>
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}">B. PSDToolKit 設定 ＞ 音声ファイルドロップ拡張 ＞ 発動条件（最重要）</Run><LineBreak/>
+                                発動条件は「<Run FontWeight="SemiBold">手動でファイルをドロップするとき</Run>」と
+                                「<Run FontWeight="SemiBold">外部API経由でドロップするとき</Run>」に分かれています。
+                                V-Adapter は外部連携APIで投入するため、<LineBreak/>
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">☑「外部API経由でドロップするとき」→「同名の *.wav ファイルと *.txt ファイルを同時にドロップしたとき」</Run>
+                                を必ず有効にしてください。<LineBreak/>
+                                ・<Run FontWeight="SemiBold">手動側だけを ON にしても V-Adapter からの投入では発動しません。</Run><LineBreak/>
+                                ・この条件で口パク準備・字幕準備等が生成されます。<LineBreak/>
+                                ・有効になっていないと PSDToolKit が処理せず、字幕が通常のテキストオブジェクトとして追加され、
+                                長さが AviUtl2 の既定値（タイムラインの拡大率に依存。例: 81フレーム）になります。<LineBreak/>
                                 ・「Shift を押しながら…」「*.exo をドロップ…」は本アプリの投入方式では発動しません。<LineBreak/>
                                 ・「字幕準備」の<Run FontWeight="SemiBold">文字コード</Run>は txt の実際のエンコーディングに合わせます（字幕が文字化けする場合は UTF-8 / Shift_JIS を切替）。<LineBreak/>
                                 ・口パク準備／多目的スライダー／字幕準備は、使うものを有効にします。
@@ -133,6 +153,12 @@
                     <StackPanel x:Name="SecChangelog" Visibility="Collapsed">
                         <TextBlock Text="更新履歴" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.6 (α)</Run><LineBreak/>
+                            ・AviUtl・AviUtl2 連携において、複数の話者ルールを設定しても先頭行のルールしか適用されない不具合を修正<LineBreak/>
+                            ・メイン画面のバージョン表記が古かったのを修正<LineBreak/>
+                            ・PSDToolKit の設定手順を修正<LineBreak/>
+                            ・「AviUtl・AviUtl2 連携」に画像つき手順（Wiki）を開くボタンを追加<LineBreak/>
+                            ・連携設定に接続先（AviUtl / AviUtl2）を表示し、連携モードと食い違う場合に警告を表示するように<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.5 (α)</Run><LineBreak/>
                             ・VOICEPEAK、VoiSona Talkにおいて、Ctrl Shift を使った修飾キー付きショートカットが環境によって効かない問題を修正<LineBreak/>
                             ・組込マクロ「音声の保存」の VOICEPEAK 用スクリプトに、アプリ切替後の待機を追加<LineBreak/>

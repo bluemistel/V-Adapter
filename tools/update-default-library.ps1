@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   現在の作業用ライブラリ (%APPDATA%\V-Adapter\library.json) を、
   リリースに同梱する既定シード (src/VAdapter.App/Resources/default-library.json) へ反映します。

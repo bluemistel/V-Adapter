@@ -89,14 +89,21 @@ VOICEVOX / A.I.VOICE2 / CeVIO AI / VOICEPEAK / VoiSona Talk … 合成音声ソ�
 外部連携API経由で AviUtl / AviUtl2 のタイムラインへ自動投入します。字幕・口パク等の生成は **PSDToolKit / PSDToolKit2** が担います。
 （設定は失敗しやすいので、アプリ内「使い方 → AviUtl・AviUtl2 連携」も併せて参照してください）
 
+> 📖 **画像つきの詳しい手順**は Wiki を参照してください →
+> [AviUtl・AviUtl2 連携](https://github.com/bluemistel/V-Adapter/wiki/AviUtl%E3%83%BBAviUtl2%E9%80%A3%E6%90%BA)
+
 ### A. 事前準備（編集ソフト側）
 - AviUtl + 拡張編集 + ごちゃまぜドロップス + PSDToolKit を導入・起動（AviUtl2 は AviUtl2 + GCMZDrops2 + PSDToolKit2）
 - 編集ソフトで**プロジェクトを開く**（解像度設定。未読込だと投入できません）
 
 ### B. PSDToolKit「発動条件」（最重要）
-「\*.wav ファイルドロップ拡張」→「発動条件」で
-**☑「同じ名前の \*.wav と \*.txt を一緒にドロップした時」** を有効にします。
+発動条件は「**手動でファイルをドロップするとき**」と「**外部API経由でドロップするとき**」に分かれています。
+V-Adapter は外部連携API で投入するため、
+**☑「外部API経由でドロップするとき」→「同名の \*.wav ファイルと \*.txt ファイルを同時にドロップしたとき」** を有効にします。
+- **手動側だけを ON にしても、V-Adapter からの投入では発動しません。**
 - V-Adapter は wav と txt を一緒に投げるため、この条件で口パク準備・字幕準備等が生成されます。
+- 有効になっていないと PSDToolKit が処理せず、字幕が通常のテキストオブジェクトとして追加され、
+  長さが AviUtl2 の既定値（タイムラインの拡大率に依存）になります。
 - 「Shift を押しながら…」「\*.exo をドロップ…」は本アプリの投入方式では発動しません。
 - 「字幕準備」の**文字コード**は txt の実際のエンコーディングに合わせます（化けるなら UTF-8 / Shift_JIS を切替）。
 

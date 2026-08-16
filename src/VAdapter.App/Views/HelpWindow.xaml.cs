@@ -10,6 +10,10 @@ public partial class HelpWindow : Window
     private const string ReportFormUrl =
         "https://ionian-gallimimus-e47.notion.site/32b8c5bf8aa481978f37e470a25e1e01";
 
+    /// <summary>AviUtl・AviUtl2 連携の手順（画像つき）。</summary>
+    private const string AviutlWikiUrl =
+        "https://github.com/bluemistel/V-Adapter/wiki/AviUtl%E3%83%BBAviUtl2%E9%80%A3%E6%90%BA";
+
     private readonly UpdateService _updateService = new();
 
     public HelpWindow()
@@ -17,6 +21,7 @@ public partial class HelpWindow : Window
         InitializeComponent();
         MenuList.SelectedIndex = 0;
 
+        VersionBadge.Text = UpdateService.DisplayVersion;
         var v = UpdateService.CurrentVersion();
         UpdateCurrentText.Text = $"現在のバージョン: v{v.Major}.{v.Minor}.{v.Build}";
     }
@@ -73,6 +78,20 @@ public partial class HelpWindow : Window
             MessageBox.Show(
                 $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{UpdateService.ReleasesUrl}\n\n{ex.Message}",
                 "アップデート", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void OnOpenAviutlWiki(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(AviutlWikiUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{AviutlWikiUrl}\n\n{ex.Message}",
+                "AviUtl・AviUtl2 連携", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

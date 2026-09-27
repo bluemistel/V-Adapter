@@ -6,7 +6,9 @@
     <DockPanel Margin="12">
         <!-- 下部ボタン -->
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button Content="OK" Width="90" Margin="0,0,8,0" IsDefault="True" Click="OnOk"/>
+            <Button Style="{StaticResource PrimaryButton}" Width="90" Margin="0,0,8,0" IsDefault="True" Click="OnOk">
+                <TextBlock Text="OK" Foreground="White"/>
+            </Button>
             <Button Content="キャンセル" Width="90" IsCancel="True"/>
         </StackPanel>
 
@@ -43,8 +45,12 @@
             <GroupBox Grid.Column="0" Header="スクリプト（対象アプリ別）" Margin="0,0,8,0">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="追加 ▾" Width="78" Margin="0,0,6,0" Click="OnAddScriptClick"/>
-                        <Button Content="削除" Width="60" Margin="0,0,6,0" Click="OnDeleteScript"/>
+                        <Button Style="{StaticResource AccentButton}" Width="78" Margin="0,0,6,0" Click="OnAddScriptClick">
+                            <TextBlock Text="追加 ▾" VerticalAlignment="Center" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                        </Button>
+                        <Button Style="{StaticResource DangerButton}" Width="60" Margin="0,0,6,0" Click="OnDeleteScript">
+                            <TextBlock Text="削除" VerticalAlignment="Center" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                        </Button>
                         <Button Content="↑" Width="40" Margin="0,0,6,0" Click="OnMoveScriptUp" ToolTip="上へ"/>
                         <Button Content="↓" Width="40" Click="OnMoveScriptDown" ToolTip="下へ"/>
                     </StackPanel>
@@ -56,7 +62,11 @@
             <GroupBox Grid.Column="1" Header="命令">
                 <DockPanel x:Name="InstructionArea" IsEnabled="False">
                     <StackPanel DockPanel.Dock="Right" Margin="8,0,0,0" Width="110">
-                        <Button Content="追加 ▾" Margin="0,0,0,6" Click="OnAddClick">
+                        <Button Style="{StaticResource AccentButton}" Margin="0,0,0,6" Click="OnAddClick">
+                            <Button.Content>
+                                <TextBlock Text="追加 ▾" VerticalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            </Button.Content>
                             <Button.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="アプリ切替待ち" Tag="waitactivation" Click="OnAddInstruction"/>
@@ -77,7 +87,9 @@
                         </Button>
                         <Button Content="編集" Margin="0,0,0,6" Click="OnEditInstruction"/>
                         <Button Content="複製" Margin="0,0,0,6" Click="OnDuplicateInstruction"/>
-                        <Button Content="削除" Margin="0,0,0,6" Click="OnDeleteInstruction"/>
+                        <Button Style="{StaticResource DangerButton}" Margin="0,0,0,6" Click="OnDeleteInstruction">
+                            <TextBlock Text="削除" VerticalAlignment="Center" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                        </Button>
                         <Button Content="↑ 上へ" Margin="0,0,0,6" Click="OnMoveUp"/>
                         <Button Content="↓ 下へ" Click="OnMoveDown"/>
                     </StackPanel>

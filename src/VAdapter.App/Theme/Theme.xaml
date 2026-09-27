@@ -17,14 +17,22 @@
     <SolidColorBrush x:Key="B.AccentHover" Color="#FFCFDDF0"/>
     <SolidColorBrush x:Key="B.TextPrimary" Color="#FF2A303B"/>
     <SolidColorBrush x:Key="B.TextSecondary" Color="#FF4A5260"/>
-    <SolidColorBrush x:Key="B.TextTertiary" Color="#FF6B7382"/>
-    <SolidColorBrush x:Key="B.TextMuted" Color="#FF9099A8"/>
+    <SolidColorBrush x:Key="B.TextTertiary" Color="#FF5F6879"/>
+    <SolidColorBrush x:Key="B.TextMuted" Color="#FF71798A"/>
     <SolidColorBrush x:Key="B.HoverBg" Color="#FFF6F7FA"/>
     <SolidColorBrush x:Key="B.Danger" Color="#FFD26060"/>
     <SolidColorBrush x:Key="B.DangerHover" Color="#FFFAE5E5"/>
     <SolidColorBrush x:Key="B.Success" Color="#FF3AA76A"/>
     <SolidColorBrush x:Key="B.SuccessHover" Color="#FF2F8F59"/>
     <SolidColorBrush x:Key="B.CheckUnchecked" Color="#FFC8CDD7"/>
+
+    <!-- コントロール面: 白いカードの上でもボタンだと分かる塗り（既定＝セカンダリ） -->
+    <SolidColorBrush x:Key="B.ControlBg" Color="#FFEDF0F5"/>
+    <SolidColorBrush x:Key="B.BorderStrong" Color="#FFC9D0DC"/>
+    <SolidColorBrush x:Key="B.DangerBorder" Color="#FFE7ADAD"/>
+    <SolidColorBrush x:Key="B.DangerBg" Color="#FFFDF3F3"/>
+    <!-- 無効: 色相を落とし「有効な主要操作」と絶対に見間違えないようにする -->
+    <SolidColorBrush x:Key="B.Disabled" Color="#FFC5CBD6"/>
     <SolidColorBrush x:Key="B.ScrollThumb" Color="#FFC8CDD7"/>
 
     <FontFamily x:Key="F.App">Yu Gothic UI, Segoe UI, Meiryo UI</FontFamily>
@@ -49,6 +57,7 @@
     <Geometry x:Key="I.Check">M20,6 L9,17 L4,12</Geometry>
     <Geometry x:Key="I.Help">M12,2 A10,10 0 1 1 11.99,2 Z M9.1,9 A3,3 0 0 1 14.9,10 C14.9,12 12,12.5 12,14 M12,17.5 L12,17.6</Geometry>
     <Geometry x:Key="I.Power">M12,3 L12,12 M7.8,6.4 A7,7 0 1 0 16.2,6.4</Geometry>
+    <Geometry x:Key="I.Settings">M3,7 L20,7 M3,12 L20,12 M3,17 L20,17 M11.2,7 A2.2,2.2 0 1 1 11.19,7 Z M17.2,12 A2.2,2.2 0 1 1 17.19,12 Z M9.2,17 A2.2,2.2 0 1 1 9.19,17 Z</Geometry>
 
     <!-- ════════ ベース: Window / TextBlock ════════ -->
     <Style TargetType="{x:Type Window}">
@@ -64,7 +73,7 @@
     <Style TargetType="{x:Type Button}">
         <Setter Property="Foreground" Value="{StaticResource B.TextPrimary}"/>
         <Setter Property="Background" Value="{StaticResource B.Surface}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource B.Border}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource B.BorderStrong}"/>
         <Setter Property="FontFamily" Value="{StaticResource F.App}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="Medium"/>
@@ -82,10 +91,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.HoverBg}"/>
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.ControlBg}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource B.TextMuted}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter Property="Opacity" Value="0.45"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -112,8 +122,9 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.PrimaryHover}"/>
                         </Trigger>
+                        <!-- 無効時は色相を捨てる。淡い青のままだと「押せる主要操作」に見えるため。 -->
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Disabled}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -140,8 +151,9 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.SuccessHover}"/>
                         </Trigger>
+                        <!-- 未選択時に「淡い緑＝押せそう」に見えないよう、無効は無彩色にする。 -->
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.5"/>
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Disabled}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -152,6 +164,8 @@
     <!-- 危険（削除） -->
     <Style x:Key="DangerButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Foreground" Value="{StaticResource B.Danger}"/>
+        <Setter Property="Background" Value="{StaticResource B.DangerBg}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource B.DangerBorder}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
@@ -166,6 +180,37 @@
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        アクセント（生成系: 追加）。カードの中で最も前に出したい操作に使う。
+        ダイアログ確定（PrimaryButton の青ベタ）とは、塗りの濃さで階層を分けている。
+        注意: TextBlock には既定スタイルで Foreground が設定されているため、
+        中身の文字色は親ボタンへ明示的にバインドすること（継承では上書きされない）。
+    -->
+    <Style x:Key="AccentButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Foreground" Value="{StaticResource B.PrimaryDark}"/>
+        <Setter Property="Background" Value="{StaticResource B.Accent}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource B.Primary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            CornerRadius="6" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.AccentHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -285,7 +330,8 @@
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.BorderLight}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.BorderLight}"/>
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Accent}"/>
+                            <Setter Property="Foreground" Value="{StaticResource B.PrimaryDark}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -363,7 +409,7 @@
     <Style TargetType="{x:Type TextBox}">
         <Setter Property="Foreground" Value="{StaticResource B.TextPrimary}"/>
         <Setter Property="Background" Value="{StaticResource B.Surface}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource B.Border}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource B.BorderStrong}"/>
         <Setter Property="FontFamily" Value="{StaticResource F.App}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="CaretBrush" Value="{StaticResource B.TextPrimary}"/>
@@ -393,7 +439,7 @@
     <Style TargetType="{x:Type ComboBox}">
         <Setter Property="Foreground" Value="{StaticResource B.TextPrimary}"/>
         <Setter Property="Background" Value="{StaticResource B.Surface}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource B.Border}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource B.BorderStrong}"/>
         <Setter Property="FontFamily" Value="{StaticResource F.App}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Padding" Value="7,4"/>
@@ -440,7 +486,12 @@
                 <ControlTemplate TargetType="{x:Type ListBoxItem}">
                     <Border x:Name="bd" Background="{TemplateBinding Background}"
                             BorderBrush="{StaticResource B.BorderLight}" BorderThickness="0,0,0,1">
-                        <ContentPresenter VerticalAlignment="Center"/>
+                        <Grid>
+                            <!-- 選択中を淡い塗りだけで示すと弱いため、左端に主色のバーを出す。 -->
+                            <Border x:Name="sel" Width="3" HorizontalAlignment="Left"
+                                    Background="{StaticResource B.Primary}" Opacity="0"/>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -448,6 +499,7 @@
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Accent}"/>
+                            <Setter TargetName="sel" Property="Opacity" Value="1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -494,6 +546,141 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- ════════ 設定画面のタブ ════════ -->
+    <!--
+        注意: FontWeight / Foreground は継承プロパティのため、TabItem 自身に設定すると
+        タブの中身（選択中コンテンツ）まで太字・淡色になる。必ずヘッダーの
+        ContentPresenter に対して TargetName 指定で当てること。
+    -->
+    <Style x:Key="SettingsTabItem" TargetType="{x:Type TabItem}">
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TabItem}">
+                    <Border x:Name="bd" Background="Transparent" Padding="15,9" Margin="0,0,2,0">
+                        <Grid>
+                            <ContentPresenter x:Name="hdr" ContentSource="Header"
+                                              VerticalAlignment="Center" HorizontalAlignment="Center"
+                                              TextElement.FontSize="13"
+                                              TextElement.FontWeight="Normal"
+                                              TextElement.Foreground="{StaticResource B.TextTertiary}"/>
+                            <Border x:Name="ind" Height="2.5" VerticalAlignment="Bottom" Margin="0,0,0,-1"
+                                    Background="{StaticResource B.Primary}" CornerRadius="1.5" Opacity="0"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.HoverBg}"/>
+                            <Setter TargetName="hdr" Property="TextElement.Foreground" Value="{StaticResource B.TextPrimary}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="hdr" Property="TextElement.Foreground" Value="{StaticResource B.Primary}"/>
+                            <Setter TargetName="hdr" Property="TextElement.FontWeight" Value="SemiBold"/>
+                            <Setter TargetName="ind" Property="Opacity" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SettingsTabControl" TargetType="{x:Type TabControl}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource SettingsTabItem}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TabControl}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1">
+                            <TabPanel IsItemsHost="True" Panel.ZIndex="1" HorizontalAlignment="Left"/>
+                        </Border>
+                        <ContentPresenter ContentSource="SelectedContent" Margin="0,12,0,0"/>
+                    </DockPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ════════ セグメント切替（自動／手動） ════════ -->
+    <Style x:Key="SegmentToggle" TargetType="{x:Type ToggleButton}">
+        <Setter Property="Height" Value="26"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource B.TextSecondary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <Border x:Name="bd" Background="Transparent" CornerRadius="5"
+                            BorderBrush="Transparent" BorderThickness="1">
+                        <TextBlock x:Name="txt" Text="{TemplateBinding Content}" VerticalAlignment="Center"
+                                   HorizontalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.HoverBg}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Accent}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource B.Primary}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter TargetName="txt" Property="Foreground" Value="{StaticResource B.PrimaryDark}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ════════ DataGrid（既定の Windows 既定色を排し、カードに馴染ませる）════════ -->
+    <Style TargetType="{x:Type DataGridColumnHeader}">
+        <Setter Property="Background" Value="{StaticResource B.HoverBg}"/>
+        <Setter Property="Foreground" Value="{StaticResource B.TextSecondary}"/>
+        <Setter Property="FontFamily" Value="{StaticResource F.App}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type DataGridColumnHeader}">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,1,1"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type DataGridRow}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FontFamily" Value="{StaticResource F.App}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource B.TextPrimary}"/>
+    </Style>
+
+    <!--
+        Template は差し替えない。既定テンプレートは編集モード（ContentPresenter →
+        編集用コントロールの入れ替え）を担っているため、色だけ Style トリガーで上書きする。
+    -->
+    <Style TargetType="{x:Type DataGridCell}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource B.TextPrimary}"/>
+        <Setter Property="FontFamily" Value="{StaticResource F.App}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource B.Accent}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource B.Accent}"/>
+                <Setter Property="Foreground" Value="{StaticResource B.TextPrimary}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
 </ResourceDictionary>

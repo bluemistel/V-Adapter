@@ -26,14 +26,26 @@ public sealed class IntegrationSettingsStore
         return Path.Combine(dir, "integration.json");
     }
 
-    /// <summary>ファイルが存在すれば読み込み、なければ既定設定（MacroOnly）を返す。</summary>
+    /// <summary>
+    /// ファイルが存在すれば読み込み、なければ既定設定（MacroOnly）を返す。
+    /// 旧形式（連携環境ごとに分かれた監視フォルダ）は読み込み時に統合リストへ移行し、保存し直す。
+    /// </summary>
     public IntegrationSettings Load()
     {
         if (!File.Exists(_filePath))
             return new IntegrationSettings();
 
         var json = File.ReadAllText(_filePath);
-        return VAdapterJson.Deserialize<IntegrationSettings>(json) ?? new IntegrationSettings();
+        var settings = VAdapterJson.Deserialize<IntegrationSettings>(json) ?? new IntegrationSettings();
+
+        if (settings.MigrateWatchFolders())
+        {
+            // 移行結果を書き戻す。失敗しても読み込み自体は成功させる（次回また移行を試みる）。
+            try { Save(settings); }
+            catch { /* 読み取り専用の配置などでは移行結果をメモリ上だけで使う */ }
+        }
+
+        return settings;
     }
 
     /// <summary>原子的に保存する（一時ファイル → 置換）。</summary>

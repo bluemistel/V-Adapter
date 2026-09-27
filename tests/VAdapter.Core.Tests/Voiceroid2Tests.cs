@@ -67,8 +67,8 @@ public class Voiceroid2Tests
             MacroBaseFolder = @"C:\ymm\zunda",
             MonitorFolderIndex = 1,
         });
-        s.AviUtl.Folders.Add(new WatchFolder { Path = @"C:\aviutl\f0" });
-        s.AviUtl.Folders.Add(new WatchFolder { Path = @"C:\aviutl\f1" });
+        s.WatchFolders.Add(new WatchFolder { Path = @"C:\aviutl\f0" });
+        s.WatchFolders.Add(new WatchFolder { Path = @"C:\aviutl\f1" });
         return s;
     }
 
@@ -142,5 +142,62 @@ public class Voiceroid2Tests
         Assert.Equal("CharName", read.Selector.AutomationId);
         Assert.IsType<SetSaveFileNameInstruction>(restored[1]);
         Assert.IsType<WriteSubtitleInstruction>(restored[2]);
+    }
+
+    // --- ユーザープリセット名（キャラクター名＋任意の文字列）の照合 ---
+
+    [Theory]
+    [InlineData("紲星あかり - コピー")]
+    [InlineData("紲星あかり_ささやき")]
+    [InlineData("紲星あかり(高め)")]
+    [InlineData("紲星あかり2")]
+    [InlineData("紲星あかり")]
+    public void MatchCharacter_PresetNames_ResolveToBaseCharacter(string uiName)
+    {
+        var s = new IntegrationSettings();
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "紲星あかり", MacroBaseFolder = @"C:\voice\akari" });
+
+        Assert.Equal("紲星あかり", s.CanonicalVoiceroid2Name(uiName));
+        Assert.Equal(@"C:\voice\akari", s.ResolveVoiceroid2Folder(IntegrationMode.MacroOnly, uiName));
+    }
+
+    [Fact]
+    public void MatchCharacter_PrefersLongestRegisteredName()
+    {
+        var s = new IntegrationSettings();
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "あかり", MacroBaseFolder = @"C:\short" });
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "あかりだいすき", MacroBaseFolder = @"C:\long" });
+
+        Assert.Equal("あかりだいすき", s.CanonicalVoiceroid2Name("あかりだいすき - コピー"));
+        Assert.Equal(@"C:\long", s.ResolveVoiceroid2Folder(IntegrationMode.MacroOnly, "あかりだいすき - コピー"));
+    }
+
+    [Fact]
+    public void MatchCharacter_ExactMatchWinsOverPrefix()
+    {
+        var s = new IntegrationSettings();
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "あかり", MacroBaseFolder = @"C:\exact" });
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "あか", MacroBaseFolder = @"C:\prefix" });
+
+        Assert.Equal(@"C:\exact", s.ResolveVoiceroid2Folder(IntegrationMode.MacroOnly, "あかり"));
+    }
+
+    [Fact]
+    public void MatchCharacter_SuffixOnly_DoesNotMatch()
+    {
+        var s = new IntegrationSettings();
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "紲星あかり", MacroBaseFolder = @"C:\voice" });
+
+        // 前方一致のみ。名前が後ろに含まれるだけのものは別キャラとして扱う。
+        Assert.Null(s.MatchVoiceroid2Character("コピー - 紲星あかり"));
+    }
+
+    [Fact]
+    public void CanonicalName_Unregistered_ReturnsInputUnchanged()
+    {
+        var s = new IntegrationSettings();
+        s.Voiceroid2.Characters.Add(new Voiceroid2Character { Name = "紲星あかり" });
+
+        Assert.Equal("東北きりたん", s.CanonicalVoiceroid2Name("東北きりたん"));
     }
 }

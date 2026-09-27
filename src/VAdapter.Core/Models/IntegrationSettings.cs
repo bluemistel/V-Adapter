@@ -22,9 +22,20 @@ public enum IntegrationMode
 /// </summary>
 public sealed class IntegrationSettings
 {
-    public int Version { get; set; } = 1;
+    /// <summary>設定フォーマットの版。2 = 監視フォルダを <see cref="WatchFolders"/> に統合。</summary>
+    public int Version { get; set; } = CurrentVersion;
+
+    /// <summary>現在の設定フォーマット版。</summary>
+    public const int CurrentVersion = 2;
 
     public IntegrationMode ActiveMode { get; set; } = IntegrationMode.MacroOnly;
+
+    /// <summary>
+    /// 合成音声ソフトの保存先として見張るフォルダ（全モード共通の唯一のリスト）。
+    /// 投げ込み・後処理のどちらもここを見る。連携環境ごとに分けていた旧形式は
+    /// <see cref="MigrateWatchFolders"/> がここへ引き継ぐ。
+    /// </summary>
+    public List<WatchFolder> WatchFolders { get; set; } = new();
 
     /// <summary>AviUtl（無印）環境の設定。</summary>
     public AviutlDropConfig AviUtl { get; set; } = new();
@@ -51,22 +62,80 @@ public sealed class IntegrationSettings
     /// <summary>VOICEROID2（AITalk5系）用オプション（例外処理。既定は無効）。</summary>
     public Voiceroid2Options Voiceroid2 { get; set; } = new();
 
+    /// <summary>保存された音声・字幕の後処理（改名・整理・配布）。既定は無効。</summary>
+    public FilePostProcessOptions PostProcess { get; set; } = new();
+
+    /// <summary>
+    /// 旧形式（連携環境ごと／後処理専用に分かれていた監視フォルダ）を <see cref="WatchFolders"/> へ引き継ぐ。
+    /// 設定の読み込み直後に一度だけ呼ぶ。既に <see cref="WatchFolders"/> があれば何もしない。
+    /// </summary>
+    /// <returns>移行を行った場合 true（呼び出し側が保存し直す判断に使う）。</returns>
+    public bool MigrateWatchFolders()
+    {
+        var upToDate = Version >= CurrentVersion;
+        Version = CurrentVersion;
+
+        if (WatchFolders.Count > 0 || upToDate)
+            return false;
+
+        // アクティブモードの監視フォルダを最優先で引き継ぐ（VOICEROID2 の番号指定がここを基準にしているため）。
+        var sources = new List<WatchFolder>();
+        AddRange(sources, ConfigFor(ActiveMode)?.Folders);
+        AddRange(sources, PostProcess.Folders);
+        AddRange(sources, AviUtl.Folders);
+        AddRange(sources, AviUtl2.Folders);
+        AddRange(sources, External.Folders);
+
+        if (sources.Count == 0)
+            return false;
+
+        WatchFolders = sources;
+        return true;
+
+        static void AddRange(List<WatchFolder> into, List<WatchFolder>? from)
+        {
+            if (from is null)
+                return;
+            foreach (var f in from)
+            {
+                if (string.IsNullOrWhiteSpace(f.Path))
+                    continue;
+                if (into.Any(x => PathEquals(x.Path, f.Path)))
+                    continue;
+                into.Add(f);
+            }
+        }
+    }
+
+    private static bool PathEquals(string a, string b)
+    {
+        try
+        {
+            return string.Equals(
+                System.IO.Path.TrimEndingDirectorySeparator(System.IO.Path.GetFullPath(a)),
+                System.IO.Path.TrimEndingDirectorySeparator(System.IO.Path.GetFullPath(b)),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     /// <summary>
     /// VOICEROID2 の保存先フォルダを、キャラクター名とアクティブモードから解決する。
-    /// マクロ動作ベースはキャラの明示フォルダ、AviUtl 系はそのモードの監視フォルダ配列の指定番号。
+    /// マクロ動作ベースはキャラの明示フォルダ、AviUtl 系は <see cref="WatchFolders"/> の指定番号。
     /// 未一致時は AviUtl 系なら先頭監視フォルダ、マクロ動作ベースなら null。
     /// </summary>
     public string? ResolveVoiceroid2Folder(IntegrationMode mode, string? characterName)
     {
-        var map = Voiceroid2.Characters.FirstOrDefault(c =>
-            !string.IsNullOrEmpty(c.Name)
-            && string.Equals(c.Name.Trim(), characterName?.Trim(), StringComparison.OrdinalIgnoreCase));
+        var map = MatchVoiceroid2Character(characterName);
 
         if (mode == IntegrationMode.MacroOnly)
             return string.IsNullOrWhiteSpace(map?.MacroBaseFolder) ? null : map!.MacroBaseFolder;
 
-        var folders = ConfigFor(mode)?.Folders;
-        if (folders is null || folders.Count == 0)
+        var folders = WatchFolders;
+        if (folders.Count == 0)
             return null;
 
         var index = map?.MonitorFolderIndex ?? 0;
@@ -74,6 +143,41 @@ public sealed class IntegrationSettings
             index = 0; // 番号が範囲外なら先頭へフォールバック。
         return folders[index].Path;
     }
+
+    /// <summary>
+    /// UI から取得した話者名に対応する登録キャラクターを返す（未一致は null）。
+    /// VOICEROID2 のユーザープリセットは「キャラクター名＋任意の文字列」（例: <c>紲星あかり - コピー</c>）に
+    /// なり得るが、区切り文字はユーザーが自由に決められるため仮定できない。
+    /// そこで完全一致を優先し、無ければ前方一致（最長の登録名を優先）で解決する。
+    /// </summary>
+    public Voiceroid2Character? MatchVoiceroid2Character(string? characterName)
+    {
+        var name = characterName?.Trim();
+        if (string.IsNullOrEmpty(name))
+            return null;
+
+        var candidates = Voiceroid2.Characters
+            .Where(c => !string.IsNullOrWhiteSpace(c.Name))
+            .ToList();
+
+        var exact = candidates.FirstOrDefault(c =>
+            string.Equals(c.Name.Trim(), name, StringComparison.OrdinalIgnoreCase));
+        if (exact is not null)
+            return exact;
+
+        // 前方一致。「あかり」と「紲星あかり」が両方登録されていても長い方を選ぶ。
+        return candidates
+            .Where(c => name.StartsWith(c.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(c => c.Name.Trim().Length)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// UI から取得した話者名を、登録済みのキャラクター名へ正規化する。
+    /// 未登録・未一致ならそのまま返す（保存ファイル名や話者ルールの表記を揃えるために使う）。
+    /// </summary>
+    public string? CanonicalVoiceroid2Name(string? characterName) =>
+        MatchVoiceroid2Character(characterName)?.Name?.Trim() ?? characterName;
 
     /// <summary>
     /// 指定モードに対応する監視/ルーティング設定を返す（MacroOnly は null）。
@@ -91,7 +195,10 @@ public sealed class IntegrationSettings
 /// <summary>1つの動画編集環境（AviUtl / AviUtl2 / 外部）への監視・ルーティング設定。</summary>
 public class AviutlDropConfig
 {
-    /// <summary>監視対象フォルダ。</summary>
+    /// <summary>
+    /// 旧形式の監視対象フォルダ（連携環境ごと）。移行専用に残しており、現在は
+    /// <see cref="IntegrationSettings.WatchFolders"/> が唯一の監視リスト。
+    /// </summary>
     public List<WatchFolder> Folders { get; set; } = new();
 
     /// <summary>話者ルール（ファイル名→レイヤー振り分け）。先頭から評価し最初に一致したものを使用。</summary>
@@ -182,8 +289,13 @@ public sealed class SpeakerRule
     /// 既定の話者抽出パターン。先頭ID + 区切り( _ または - ) + 話者名 + 区切り の形式から
     /// 話者名（グループ1）を抽出する。
     /// 例: "04_IA_台詞" → IA / "2-彩澄りりせ-台詞-…" → 彩澄りりせ / "001_東北きりたん（ノーマル）_台詞" → 東北きりたん（ノーマル）。
+    /// <para>
+    /// 先頭が <c>yyyyMMdd_HHmmss_</c> の場合はそれを日時として読み飛ばす。V-Adapter が
+    /// 名前を組み立てる VOICEROID2 は「日付_時刻_話者_本文」の 4 要素になり、
+    /// 単純に「2 番目の要素」を取ると時刻（例: 102140）を話者名と誤認するため。
+    /// </para>
     /// </summary>
-    public const string DefaultNamePattern = @"^[^_\-]*[_\-](.+?)[_\-]";
+    public const string DefaultNamePattern = @"^(?:\d{8}_\d{6}_|[^_\-]*[_\-])(.+?)[_\-]";
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
@@ -197,4 +309,56 @@ public sealed class SpeakerRule
     public int Layer { get; set; } = 1;
 
     public bool Enabled { get; set; } = true;
+}
+
+/// <summary>
+/// 合成音声ソフトが書き出した「同名 wav+txt」を、V-Adapter 側で整えるための設定。
+///
+/// 保存ダイアログを書き換える方式（保存先を合成音声ソフトへ指示する）は、ソフトごとに
+/// ダイアログの実装・入力制限が異なり対応コストが増え続けるため採らない。
+/// 「保存された後に引き取って整える」ことで、合成音声ソフトへの依存を持たずに
+/// 改名・話者別の整理・別フォルダへの配布をまとめて行う。
+/// </summary>
+public sealed class FilePostProcessOptions
+{
+    /// <summary>後処理を行うか（既定 OFF＝従来どおり何もしない）。</summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>
+    /// 旧形式の後処理専用監視フォルダ。移行専用に残しており、現在は
+    /// <see cref="IntegrationSettings.WatchFolders"/> が唯一の監視リスト。
+    /// </summary>
+    public List<WatchFolder> Folders { get; set; } = new();
+
+    /// <summary>
+    /// 改名テンプレート。空なら改名しない。
+    /// トークン: <c>{name}</c>（元のファイル名・拡張子なし）、<c>{speaker}</c>（話者名）、
+    /// <c>{date}</c> / <c>{date:書式}</c>（現在日時）。
+    /// 先頭に日時を付けるなら <c>{date}_{name}</c>、末尾なら <c>{name}_{date}</c>。
+    /// 解決結果が空になったトークンは、隣接する区切り文字ごと取り除かれる。
+    /// </summary>
+    public string NameTemplate { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 整えた後の置き場所。空なら移動せず、保存された場所に置いたままにする。
+    /// YMM4 のカスタムボイスフォルダなど、編集ソフトに読み込ませたい場所を指定する。
+    /// </summary>
+    public string? DestinationFolder { get; set; }
+
+    /// <summary>話者名のサブフォルダへ振り分けるか（話者が判定できた場合のみ）。</summary>
+    public bool SpeakerSubfolder { get; set; }
+
+    /// <summary>
+    /// ファイル名から話者名を抽出する正規表現（グループ1が話者名）。空なら
+    /// <see cref="SpeakerRule.DefaultNamePattern"/> を使う。
+    /// 「投げ込み」タブの話者ルールは AviUtl 系にしか無いため、マクロ動作ベースでも
+    /// 話者名を使えるよう後処理側に持たせている。ルールで判定できた場合はそちらを優先。
+    /// </summary>
+    public string SpeakerPattern { get; set; } = string.Empty;
+
+    /// <summary>「日時_元のファイル名」。後処理を有効にしたときの既定。</summary>
+    public const string TemplateDateName = "{date}_{name}";
+
+    /// <summary>「日時_話者名_元のファイル名」。話者ルールがある連携環境のみ有効。</summary>
+    public const string TemplateDateSpeakerName = "{date}_{speaker}_{name}";
 }

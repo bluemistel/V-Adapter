@@ -97,10 +97,21 @@ public partial class MainWindow : Window
     private void OnOpenIntegration(object sender, RoutedEventArgs e)
     {
         var window = new Views.IntegrationSettingsWindow(_state) { Owner = this };
-        if (window.ShowDialog() == true)
+        var applied = window.ShowDialog() == true;
+
+        // 対象アプリは設定画面側で即時保存されるため、OK/キャンセルに関わらず表示を更新する。
+        if (window.TargetsChanged)
+        {
+            foreach (var row in _rows)
+                row.RefreshAll();
+            ReloadTargetSwitcher();
+            Log("対象アプリの登録を更新しました。");
+        }
+
+        if (applied)
         {
             UpdateModeLabel();
-            Log("連携設定を更新しました。");
+            Log("設定を更新しました。");
         }
         else
         {
@@ -223,8 +234,9 @@ public partial class MainWindow : Window
         }
         else if (toggle.Tag as string == _activeTargetId)
         {
-            // 自身を解除 → 自動判定へ。
+            // 自身を解除 → 自動判定へ。切替UIの表示も揃える。
             _activeTargetId = null;
+            ApplySendMode(auto: true);
             Log("送信先を自動判定に戻しました。");
         }
     }
@@ -241,16 +253,35 @@ public partial class MainWindow : Window
         window.ShowDialog();
     }
 
-    private void OnClearActiveTarget(object sender, RoutedEventArgs e)
+    // --- 送信先モード（自動 / 手動） ---
+
+    private void OnSendModeAuto(object sender, RoutedEventArgs e)
     {
-        if (_activeTargetId is null)
-            return;
+        var hadTarget = _activeTargetId is not null;
         _activeTargetId = null;
         ReloadTargetSwitcher();
-        Log("送信先を自動判定に戻しました。");
+        ApplySendMode(auto: true);
+        if (hadTarget)
+            Log("送信先を自動判定に戻しました。");
+    }
+
+    private void OnSendModeManual(object sender, RoutedEventArgs e) => ApplySendMode(auto: false);
+
+    /// <summary>自動／手動の見た目と一覧の表示を切り替える。</summary>
+    private void ApplySendMode(bool auto)
+    {
+        AutoModeToggle.IsChecked = auto;
+        ManualModeToggle.IsChecked = !auto;
+        AutoModeHint.Visibility = auto ? Visibility.Visible : Visibility.Collapsed;
+        ManualModeHint.Visibility = auto ? Visibility.Collapsed : Visibility.Visible;
+        ManualPane.Visibility = auto ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private MacroRow? SelectedRow => MacroList.SelectedItem as MacroRow;
+
+    /// <summary>マクロ未選択のうちは「実行」を押せないようにする（有効に見える誤認を防ぐ）。</summary>
+    private void OnMacroSelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        RunButton.IsEnabled = SelectedRow is not null;
 
     // --- ボタン操作 ---
 
@@ -412,20 +443,6 @@ public partial class MainWindow : Window
             MessageBox.Show($"エクスポートに失敗しました: {ex.Message}", "エラー",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
-    }
-
-    private void OnManageTargets(object sender, RoutedEventArgs e)
-    {
-        var window = new TargetManagerWindow(_state.Library) { Owner = this };
-        // 「保存して閉じる」のときのみ本体へ反映済み。取り消し時は何もしない。
-        if (window.ShowDialog() != true)
-            return;
-
-        Persist();
-        // 対象アプリ名・構成が変わった可能性があるので表示更新。
-        foreach (var row in _rows)
-            row.RefreshAll();
-        ReloadTargetSwitcher();
     }
 
     // --- 共通 ---

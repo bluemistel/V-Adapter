@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using VAdapter.App.Services;
+using VAdapter.Core.Media;
 using VAdapter.Core.Models;
 using VAdapter.Core.Serialization;
 
@@ -8,24 +9,28 @@ namespace VAdapter.App.Views;
 
 public partial class IntegrationSettingsWindow : Window
 {
-    /// <summary>監視フォルダの表示用ラッパー。</summary>
+    /// <summary>
+    /// 保存フォルダ 1 件の表示用ラッパー。
+    /// 「サブフォルダも含む」は行内のチェックボックスから <see cref="Model"/> へ直接書き戻される。
+    /// </summary>
     public sealed class FolderRow
     {
         public WatchFolder Model { get; }
         public FolderRow(WatchFolder model) => Model = model;
-        public string Display => Model.IncludeSubdirectories
-            ? $"{Model.Path}   （サブフォルダ含む）"
-            : Model.Path;
     }
 
     private readonly AppState _state;
     private readonly IntegrationSettings _working;
+
+    /// <summary>この画面から対象アプリを編集して保存したか（呼び出し元の表示更新用）。</summary>
+    public bool TargetsChanged { get; private set; }
 
     private AviutlDropConfig? _currentConfig;
     private readonly ObservableCollection<FolderRow> _folders = new();
     private readonly ObservableCollection<SpeakerRule> _rules = new();
     private readonly ObservableCollection<Voiceroid2Character> _v2chars = new();
     private bool _initializing;
+    private bool _loadingPostProcess;
 
     public IntegrationSettingsWindow(AppState state)
     {
@@ -33,14 +38,23 @@ public partial class IntegrationSettingsWindow : Window
         _state = state;
         _working = DeepClone(state.Integration);
 
+        // 保存フォルダは全モード共通の単一リスト。
         FolderList.ItemsSource = _folders;
+        foreach (var f in _working.WatchFolders)
+            _folders.Add(new FolderRow(f));
+        _folders.CollectionChanged += (_, _) => UpdateWatchStatus();
+
         RulesGrid.ItemsSource = _rules;
+
+        // 後処理（全モード共通）
+        LoadPostProcess();
 
         // VOICEROID2 オプション（全モード共通）
         V2EnableCheck.IsChecked = _working.Voiceroid2.Enabled;
         foreach (var c in _working.Voiceroid2.Characters)
             _v2chars.Add(c);
         V2Grid.ItemsSource = _v2chars;
+        UpdateFolderIndexHint();
 
         _state.DropService.Log += OnServiceLog;
         Closed += (_, _) => _state.DropService.Log -= OnServiceLog;
@@ -103,11 +117,15 @@ public partial class IntegrationSettingsWindow : Window
         };
         UpdateEditorPlaceholder();
 
-        _folders.Clear();
         _rules.Clear();
 
+        // 話者ルールはモードごとに異なり、プレビューの話者名に影響するため切替のたびに見直す。
         if (_currentConfig is null)
+        {
+            UpdatePreview();
+            UpdateWatchStatus();
             return;
+        }
 
         DefaultLayerBox.Text = _currentConfig.DefaultLayer.ToString();
         FrameAdvanceBox.Text = _currentConfig.FrameAdvance.ToString();
@@ -122,11 +140,11 @@ public partial class IntegrationSettingsWindow : Window
             TimeoutBox.Text = ext.TimeoutMs.ToString();
         }
 
-        foreach (var f in _currentConfig.Folders)
-            _folders.Add(new FolderRow(f));
         foreach (var r in _currentConfig.Rules)
             _rules.Add(r);
 
+        UpdatePreview();
+        UpdateWatchStatus();
         RefreshStatus();
     }
 
@@ -138,6 +156,9 @@ public partial class IntegrationSettingsWindow : Window
             _working.MacroEditorPath = editor;
         else if (_currentConfig is not null)
             _currentConfig.EditorPath = editor;
+
+        // 保存フォルダ（全モード共通）もモードに依らず確定。
+        _working.WatchFolders = _folders.Select(r => r.Model).ToList();
 
         // VOICEROID2 オプション（全モード共通）もモードに依らず確定。
         V2Grid.CommitEdit(System.Windows.Controls.DataGridEditingUnit.Row, true);
@@ -155,8 +176,9 @@ public partial class IntegrationSettingsWindow : Window
         _currentConfig.AdvanceToItemEnd = AdvanceToItemEndCheck.IsChecked == true;
         _currentConfig.StableWaitMs = ParseOr(StableWaitBox.Text, _currentConfig.StableWaitMs);
         _currentConfig.Margin = ParseOr(MarginBox.Text, _currentConfig.Margin);
-        _currentConfig.Folders = _folders.Select(r => r.Model).ToList();
         _currentConfig.Rules = _rules.ToList();
+        // 旧形式の監視フォルダは移行済み。保存し直す際に古い値を残さない。
+        _currentConfig.Folders.Clear();
 
         if (_currentConfig is ExternalAdapterConfig ext)
         {
@@ -165,18 +187,16 @@ public partial class IntegrationSettingsWindow : Window
         }
     }
 
-    // --- フォルダ ---
+    // --- 保存フォルダ ---
 
     private void OnAddFolder(object sender, RoutedEventArgs e)
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "監視するフォルダを選択" };
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "合成音声ソフトの保存先フォルダを選択" };
         if (dialog.ShowDialog(this) != true)
             return;
-        _folders.Add(new FolderRow(new WatchFolder
-        {
-            Path = dialog.FolderName,
-            IncludeSubdirectories = IncludeSubCheck.IsChecked == true,
-        }));
+        if (_folders.Any(r => string.Equals(r.Model.Path, dialog.FolderName, StringComparison.OrdinalIgnoreCase)))
+            return;
+        _folders.Add(new FolderRow(new WatchFolder { Path = dialog.FolderName }));
     }
 
     private void OnRemoveFolder(object sender, RoutedEventArgs e)
@@ -198,12 +218,15 @@ public partial class IntegrationSettingsWindow : Window
         };
         _rules.Add(rule);
         RulesGrid.SelectedItem = rule;
+        // ルールが増減すると後処理で話者名が使えるかが変わる。
+        UpdatePreview();
     }
 
     private void OnRemoveRule(object sender, RoutedEventArgs e)
     {
         if (RulesGrid.SelectedItem is SpeakerRule rule)
             _rules.Remove(rule);
+        UpdatePreview();
     }
 
     // --- 状態 / テスト ---
@@ -264,8 +287,170 @@ public partial class IntegrationSettingsWindow : Window
     private void OnOk(object sender, RoutedEventArgs e)
     {
         FlushEditor();
+        CommitPostProcess();
         _state.UpdateIntegration(_working);
         DialogResult = true;
+    }
+
+    // --- 保存後の整理（後処理） ---
+
+    /// <summary>改名プリセット（ComboBox の並び順と一致させる）。</summary>
+    private const int PresetNone = 0, PresetDate = 1, PresetDateSpeaker = 2, PresetCustom = 3;
+
+    /// <summary>
+    /// プレビュー用の架空のファイル名。実ファイルは使わない。
+    /// 実ファイルを使うと、たまたま残っていた古いファイルの話者名が
+    /// 「いま判別された結果」に見えてしまい、事実と異なる情報を与えるため。
+    /// </summary>
+    private const string PreviewSampleName = "01_キャラ名_セリフ";
+    private const string PreviewSampleSpeaker = "キャラ名";
+
+    private void LoadPostProcess()
+    {
+        _loadingPostProcess = true;
+
+        var pp = _working.PostProcess;
+        PpEnableCheck.IsChecked = pp.Enabled;
+        PpTemplateBox.Text = pp.NameTemplate;
+        PpDestBox.Text = pp.DestinationFolder ?? string.Empty;
+        PpSpeakerSubCheck.IsChecked = pp.SpeakerSubfolder;
+        PpPresetCombo.SelectedIndex = PresetFor(pp.NameTemplate);
+
+        _loadingPostProcess = false;
+
+        UpdatePostProcessEnabled();
+        UpdatePreview();
+    }
+
+    /// <summary>テンプレート文字列に対応するプリセット番号を返す（一致しなければカスタム）。</summary>
+    private static int PresetFor(string? template) => (template ?? string.Empty).Trim() switch
+    {
+        "" => PresetNone,
+        FilePostProcessOptions.TemplateDateName => PresetDate,
+        FilePostProcessOptions.TemplateDateSpeakerName => PresetDateSpeaker,
+        _ => PresetCustom,
+    };
+
+    /// <summary>現在の選択から実際に使うテンプレート文字列を得る。</summary>
+    private string CurrentTemplate() => PpPresetCombo.SelectedIndex switch
+    {
+        PresetDate => FilePostProcessOptions.TemplateDateName,
+        PresetDateSpeaker => FilePostProcessOptions.TemplateDateSpeakerName,
+        PresetCustom => PpTemplateBox.Text.Trim(),
+        _ => string.Empty,
+    };
+
+    private void CommitPostProcess()
+    {
+        var pp = _working.PostProcess;
+        pp.Enabled = PpEnableCheck.IsChecked == true;
+        pp.NameTemplate = CurrentTemplate();
+        pp.DestinationFolder = string.IsNullOrWhiteSpace(PpDestBox.Text) ? null : PpDestBox.Text.Trim();
+        pp.SpeakerSubfolder = PpSpeakerSubCheck.IsChecked == true;
+        // 旧形式（後処理専用の監視フォルダ・追加の配布先）は廃止。保存時に残さない。
+        pp.Folders.Clear();
+    }
+
+    private void OnPpToggled(object sender, RoutedEventArgs e)
+    {
+        // 有効にした直後にテンプレート未設定なら、最も使われる「日時 ＋ 元のファイル名」を既定にする。
+        if (!_loadingPostProcess && PpEnableCheck.IsChecked == true && PpPresetCombo.SelectedIndex == PresetNone
+            && string.IsNullOrWhiteSpace(_working.PostProcess.NameTemplate))
+            PpPresetCombo.SelectedIndex = PresetDate;
+
+        UpdatePostProcessEnabled();
+        UpdateWatchStatus();
+        UpdatePreview();
+    }
+
+    /// <summary>無効時に設定項目を触れないようにして、有効/無効の関係を分かりやすくする。</summary>
+    private void UpdatePostProcessEnabled()
+    {
+        var enabled = PpEnableCheck.IsChecked == true;
+        if (PpBody is not null)
+            PpBody.IsEnabled = enabled;
+        // ③ の移動も後処理の一部なので、同じスイッチで有効・無効を揃える。
+        if (PpDestBody is not null)
+            PpDestBody.IsEnabled = enabled;
+    }
+
+    private void OnPpPresetChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (PpCustomPanel is null)
+            return;
+
+        var custom = PpPresetCombo.SelectedIndex == PresetCustom;
+        PpCustomPanel.Visibility = custom ? Visibility.Visible : Visibility.Collapsed;
+
+        // カスタムへ切り替えたとき、直前のプリセットを編集の出発点として引き継ぐ。
+        if (custom && !_loadingPostProcess && string.IsNullOrWhiteSpace(PpTemplateBox.Text))
+            PpTemplateBox.Text = FilePostProcessOptions.TemplateDateName;
+
+        UpdatePreview();
+    }
+
+    private void OnPpTemplateChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdatePreview();
+
+    private void OnPpDestChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdatePreview();
+
+    /// <summary>カレット位置へトークンを挿入する（手入力の誤記を防ぐ）。</summary>
+    private void OnPpInsertToken(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: string token })
+            return;
+
+        var caret = PpTemplateBox.SelectionStart;
+        var text = PpTemplateBox.Text;
+        PpTemplateBox.Text = text.Remove(caret, PpTemplateBox.SelectionLength).Insert(caret, token);
+        PpTemplateBox.SelectionStart = caret + token.Length;
+        PpTemplateBox.Focus();
+    }
+
+    /// <summary>
+    /// 設定した内容で名前と置き場所がどうなるかを、架空のサンプルで示す。
+    /// 実ファイルは参照しない（実際の判別結果と見間違えるため）。
+    /// </summary>
+    private void UpdatePreview()
+    {
+        if (PpPreviewText is null)
+            return;
+
+        var name = FilePostProcessPlanner.ResolveName(
+            PreviewSampleName, PreviewSampleSpeaker, CurrentTemplate(), DateTime.Now);
+
+        var dest = PpDestBox.Text?.Trim();
+        var place = string.IsNullOrWhiteSpace(dest) ? "①の保存フォルダ" : dest;
+        if (PpSpeakerSubCheck.IsChecked == true)
+            place = System.IO.Path.Combine(place, PreviewSampleSpeaker);
+
+        PpPreviewText.Text = $"例）{PreviewSampleName}.wav  →  {place}\\{name}.wav";
+    }
+
+    /// <summary>① の状態（監視できているか）を一行で示す。設定漏れを画面上で気づけるようにする。</summary>
+    private void UpdateWatchStatus()
+    {
+        if (WatchStatusText is null)
+            return;
+
+        var count = _folders.Count(r => !string.IsNullOrWhiteSpace(r.Model.Path));
+        var post = PpEnableCheck?.IsChecked == true;
+
+        if (count == 0)
+        {
+            WatchStatusText.Text = "保存フォルダが未登録のため、投げ込みも後処理も動きません。";
+            WatchStatusText.Foreground = (System.Windows.Media.Brush)FindResource("B.Danger");
+            return;
+        }
+
+        WatchStatusText.Text = $"監視対象: {count} フォルダ／後処理: {(post ? "有効" : "無効")}";
+        WatchStatusText.Foreground = (System.Windows.Media.Brush)FindResource("B.TextTertiary");
+    }
+
+    private void OnPpBrowseDest(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "整えた後の置き場所を選択" };
+        if (dialog.ShowDialog(this) == true)
+            PpDestBox.Text = dialog.FolderName;
     }
 
     // --- ログ ---
@@ -324,6 +509,21 @@ public partial class IntegrationSettingsWindow : Window
 
     // --- VOICEROID2 オプション ---
 
+    private void OnV2EnabledToggled(object sender, RoutedEventArgs e) => UpdateFolderIndexHint();
+
+    /// <summary>
+    /// 保存フォルダの行番号が何に使われるかの説明は、VOICEROID2 を使う場合にしか関係しない。
+    /// 常時出すと他の利用者には無関係な情報になるため、有効なときだけ表示する。
+    /// </summary>
+    private void UpdateFolderIndexHint()
+    {
+        if (FolderIndexHint is null)
+            return;
+        FolderIndexHint.Visibility = V2EnableCheck.IsChecked == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
     private void OnV2AddChar(object sender, RoutedEventArgs e)
     {
         var c = new Voiceroid2Character { Name = "", MonitorFolderIndex = 0 };
@@ -360,4 +560,15 @@ public partial class IntegrationSettingsWindow : Window
 
     private static IntegrationSettings DeepClone(IntegrationSettings s) =>
         VAdapterJson.Deserialize<IntegrationSettings>(VAdapterJson.Serialize(s))!;
+
+    /// <summary>対象アプリ管理を開く。保存された場合はライブラリを永続化し、呼び出し元へ変更を伝える。</summary>
+    private void OnOpenTargetManager(object sender, RoutedEventArgs e)
+    {
+        var window = new TargetManagerWindow(_state.Library) { Owner = this };
+        if (window.ShowDialog() != true)
+            return;
+
+        _state.SaveAndRebindHotkeys();
+        TargetsChanged = true;
+    }
 }

@@ -236,6 +236,11 @@
               "id": "812a8cbe5c92427b9e35a162f7c8ed5a"
             },
             {
+              "kind": "wait",
+              "durationMs": 500,
+              "id": "7f4c854a076042d49ee7609c276e3406"
+            },
+            {
               "kind": "sendkeys",
               "keyCombination": {
                 "modifiers": "Control",
@@ -243,31 +248,6 @@
                 "keyName": "E"
               },
               "id": "5b2b61d7f67e4a48ab56451d6e1a7240"
-            },
-            {
-              "kind": "waitdialog",
-              "titleContains": "WAV\u3092\u51FA\u529B",
-              "dialogClass": "#32770",
-              "bringToForeground": true,
-              "timeoutMs": 4000,
-              "id": "76ac310b9a344a589eb1633be8a231fa"
-            },
-            {
-              "kind": "switchtarget",
-              "target": "Dialog",
-              "titleContains": "WAV\u3092\u51FA\u529B",
-              "dialogClass": "#32770",
-              "timeoutMs": 5000,
-              "id": "15d6969c64a648538729509e5014f74b"
-            },
-            {
-              "kind": "sendkeys",
-              "keyCombination": {
-                "modifiers": "None",
-                "virtualKey": 13,
-                "keyName": "Return"
-              },
-              "id": "1c4104a4ab804dd8994dd5d2c4113a33"
             }
           ]
         },

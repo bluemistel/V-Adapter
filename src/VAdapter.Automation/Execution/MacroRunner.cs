@@ -181,7 +181,7 @@ public sealed class MacroRunner
             LaunchAppInstruction launch => ExecuteLaunchApp(launch, ctx, log),
             ReadUiTextInstruction readui => ExecuteReadUiText(readui, ctx, log),
             SetSaveFileNameInstruction savename => ExecuteSetSaveFileName(savename, ctx, log),
-            WriteSubtitleInstruction writesub => ExecuteWriteSubtitle(writesub, ctx, log),
+            WriteSubtitleInstruction writesub => await ExecuteWriteSubtitle(writesub, ctx, log, ct),
             _ => MacroRunResult.Fail($"未対応の命令: {instruction.Kind}", instruction),
         };
     }
@@ -255,6 +255,18 @@ public sealed class MacroRunner
 
         var mode = ctx.Integration?.ActiveMode ?? IntegrationMode.MacroOnly;
         var character = ctx.Variables.GetValueOrDefault(instr.CharacterVariable);
+
+        // ユーザープリセット名（例: 「紲星あかり - コピー」）は登録済みキャラクター名へ正規化する。
+        // 保存ファイル名と話者ルールの表記を、プリセットの作り方に左右されないようにするため。
+        var canonical = ctx.Integration?.CanonicalVoiceroid2Name(character);
+        if (!string.IsNullOrWhiteSpace(canonical)
+            && !string.Equals(canonical, character, StringComparison.Ordinal))
+        {
+            log?.Report($"    話者名を正規化: {character} → {canonical}");
+            character = canonical;
+            ctx.Variables[instr.CharacterVariable] = canonical;
+        }
+
         var folder = ctx.Integration?.ResolveVoiceroid2Folder(mode, character);
         if (string.IsNullOrWhiteSpace(folder))
             return MacroRunResult.Fail(
@@ -274,14 +286,22 @@ public sealed class MacroRunner
         return MacroRunResult.Ok();
     }
 
-    private MacroRunResult ExecuteWriteSubtitle(WriteSubtitleInstruction instr, RunContext ctx, IProgress<string>? log)
+    private async Task<MacroRunResult> ExecuteWriteSubtitle(
+        WriteSubtitleInstruction instr, RunContext ctx, IProgress<string>? log, CancellationToken ct)
     {
         var savePath = ctx.Variables.GetValueOrDefault(instr.PathVariable);
         if (string.IsNullOrWhiteSpace(savePath))
             return MacroRunResult.Fail("保存パスが未設定です（先に「保存ファイル名の書き換え」を実行してください）。", instr);
 
         var text = ctx.Variables.GetValueOrDefault(instr.TextVariable) ?? string.Empty;
-        var txtPath = Path.ChangeExtension(savePath, ".txt");
+
+        // 保存ダイアログにはファイル名しか入れられないため、実際の保存先は合成音声ソフト側の
+        // 「前回のフォルダ」になり、設定した保存先と食い違うことがある。
+        // 字幕は「音声が実際に落ちた場所」の隣へ置かないと、同名 wav+txt のペアが成立しない。
+        var actual = await WaitForSavedAudioAsync(savePath, ctx, instr.WaitForAudioMs, ct);
+        var basePath = actual ?? savePath;
+        var txtPath = Path.ChangeExtension(basePath, ".txt");
+
         try
         {
             File.WriteAllText(txtPath, text, new UTF8Encoding(false));
@@ -291,9 +311,89 @@ public sealed class MacroRunner
             return MacroRunResult.Fail($"字幕テキストの書き出しに失敗しました: {ex.Message}", instr);
         }
 
+        if (actual is null)
+        {
+            log?.Report($"    警告: 音声ファイルが見つからないため設定上の保存先へ字幕を書き出しました: {txtPath}");
+        }
+        else if (!PathsEqual(Path.GetDirectoryName(actual), Path.GetDirectoryName(savePath)))
+        {
+            log?.Report($"    音声の実際の保存先に追従: {Path.GetDirectoryName(actual)}");
+        }
+
         log?.Report($"    字幕: {Path.GetFileName(txtPath)}（UTF-8）");
         return MacroRunResult.Ok();
     }
+
+    /// <summary>
+    /// 保存されたはずの音声ファイルを探し、見つかったフルパスを返す（見つからなければ null）。
+    /// 想定保存先に加えて、現在モードの監視フォルダも候補にする。
+    /// </summary>
+    private static async Task<string?> WaitForSavedAudioAsync(
+        string savePath, RunContext ctx, int timeoutMs, CancellationToken ct)
+    {
+        var fileName = Path.GetFileName(savePath);
+        if (string.IsNullOrEmpty(fileName))
+            return null;
+
+        var folders = CandidateFolders(savePath, ctx).ToList();
+        var deadline = DateTime.UtcNow.AddMilliseconds(Math.Max(0, timeoutMs));
+
+        while (true)
+        {
+            foreach (var (folder, includeSub) in folders)
+            {
+                var direct = Path.Combine(folder, fileName);
+                if (File.Exists(direct))
+                    return direct;
+
+                if (!includeSub || !Directory.Exists(folder))
+                    continue;
+                try
+                {
+                    var hit = Directory
+                        .EnumerateFiles(folder, fileName, SearchOption.AllDirectories)
+                        .FirstOrDefault();
+                    if (hit is not null)
+                        return hit;
+                }
+                catch
+                {
+                    // アクセス不能なサブフォルダは無視する。
+                }
+            }
+
+            if (DateTime.UtcNow >= deadline)
+                return null;
+            await Task.Delay(200, ct).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>音声の探索先候補（想定保存先 → 監視フォルダ）を重複なく返す。</summary>
+    private static IEnumerable<(string Folder, bool IncludeSub)> CandidateFolders(string savePath, RunContext ctx)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var intended = Path.GetDirectoryName(savePath);
+        if (!string.IsNullOrWhiteSpace(intended) && seen.Add(intended))
+            yield return (intended, false);
+
+        var watch = ctx.Integration?.WatchFolders;
+        if (watch is null)
+            yield break;
+
+        foreach (var f in watch)
+        {
+            if (string.IsNullOrWhiteSpace(f.Path) || !seen.Add(f.Path))
+                continue;
+            yield return (f.Path, f.IncludeSubdirectories);
+        }
+    }
+
+    private static bool PathsEqual(string? a, string? b) =>
+        string.Equals(
+            a?.TrimEnd(Path.DirectorySeparatorChar),
+            b?.TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
 
     private async Task<MacroRunResult> ExecuteWait(WaitInstruction wait, CancellationToken ct)
     {

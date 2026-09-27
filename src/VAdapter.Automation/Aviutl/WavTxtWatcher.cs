@@ -75,12 +75,33 @@ public sealed class WavTxtWatcher : IDisposable
         }
     }
 
+    /// <summary>
+    /// 指定の音声パスを処理済みとして登録し、以後の検知対象から外す。
+    /// 後処理で移動・複製したファイルが監視フォルダに現れて再投入されるのを防ぐ。
+    /// </summary>
+    public void Ignore(string wavPath)
+    {
+        if (string.IsNullOrWhiteSpace(wavPath))
+            return;
+        lock (_gate)
+        {
+            _pending.Remove(wavPath);
+            _lastSize.Remove(wavPath);
+            _processed[wavPath] = DateTime.UtcNow;
+        }
+    }
+
     private void OnWavRenamed(object sender, RenamedEventArgs e) => Enqueue(e.FullPath);
     private void OnWavEvent(object sender, FileSystemEventArgs e) => Enqueue(e.FullPath);
 
     private void Enqueue(string path)
     {
         if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // 書き込み途中の一時ファイル（VoiSona Talk の *_tempXXXX.wav 等）は対象外。
+        // 改名後の最終ファイルが別途 Renamed で通知されるため、取りこぼしにはならない。
+        if (VAdapter.Core.Media.TransientFile.IsTransient(path))
             return;
         lock (_gate)
         {

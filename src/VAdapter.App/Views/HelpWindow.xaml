@@ -52,15 +52,15 @@
                         <TextBlock Text="使い方（基本）" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
                         <TextBlock TextWrapping="Wrap" LineHeight="23" Foreground="{StaticResource B.TextSecondary}">
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">1. 対象アプリを登録</Run><LineBreak/>
-                            「対象アプリ管理」を開き、合成音声ソフトを登録します。「実行中ウィンドウから取得」で起動中のアプリを選ぶと簡単です。座標モード（相対／絶対）を選べます。<LineBreak/><LineBreak/>
+                            ヘッダーの「設定」→「対象アプリ」タブから「対象アプリ管理」を開き、合成音声ソフトを登録します。同梱の初期値でほとんどの環境はそのまま動作するため、通常は変更不要です。「実行中ウィンドウから取得」で起動中のアプリを選ぶと簡単です。座標モード（相対／絶対）を選べます。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">2. マクロを実行</Run><LineBreak/>
                             一覧でマクロを選んで「実行」、または設定したショートカットで起動します。標準マクロ：音声の再生（Ctrl+Q）／音声の保存（Ctrl+R）。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">3. 送信先を固定（任意）</Run><LineBreak/>
-                            複数の合成音声ソフトを同時起動しているときは、右の「送信先」で送信先アプリを固定できます。未選択時は前面のアプリを自動判定します。<LineBreak/><LineBreak/>
+                            既定は「自動」で、前面にある合成音声ソフトを自動で認識して実行します。複数の合成音声ソフトを同時起動していて送信先を固定したいときだけ、右の「送信先」を「手動」に切り替えてアプリを選びます。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">4. マクロを編集</Run><LineBreak/>
                             「操作」→「編集」で、対象アプリごとのスクリプト（命令列）を作成します。命令：待機／クリック（基準位置でサイズ追従）／キー送信／ウィンドウ・ダイアログ・テキスト・アプリ切替の各待ち／操作対象の切り替え。<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">5. テンプレートの活用</Run><LineBreak/>
-                            A.I.VOICE2／CeVIO AI／VOICEPEAK／VoiSona Talk／VOICEVOX を対象アプリのテンプレートとして同梱しています。お使いの環境で「対象アプリ管理」から登録するとマクロが利用できます。
+                            A.I.VOICE2／CeVIO AI／VOICEPEAK／VoiSona Talk／VOICEVOX を対象アプリのテンプレートとして同梱しています。お使いの環境で「設定」→「対象アプリ」から登録するとマクロが利用できます。
                         </TextBlock>
                         <TextBlock Margin="0,12,0,0" FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"
                                    Text="補足: 日本語OCR（テキスト表示待ち）には Windows の OCR 言語機能（日本語）が必要です。管理者権限で動くアプリを操作する場合は本アプリも管理者として実行してください。"/>
@@ -122,9 +122,10 @@
                                 CornerRadius="6" Padding="14" Margin="0,0,0,10">
                             <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
                                 <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">C. V-Adapter 連携設定</Run><LineBreak/>
-                                ・メイン画面の「連携設定」を開き、<Run FontWeight="SemiBold">連携環境</Run>を選択（マクロ動作ベース／AviUtl+PSDToolKit／AviUtl2+PSDToolKit2）。設定は環境ごとに独立です。<LineBreak/>
-                                ・「<Run FontWeight="SemiBold">状態更新</Run>」で「接続OK」「プロジェクト読込済み」を確認（未検出＝編集ソフト/プラグイン未起動、未読込＝プロジェクトを開く）。<LineBreak/>
-                                ・「<Run FontWeight="SemiBold">監視フォルダ</Run>」に合成音声ソフトの書き出し先を追加。<LineBreak/>
+                                ・ヘッダーの「設定」を開き、「<Run FontWeight="SemiBold">連携環境</Run>」タブでモードを選択（マクロ動作ベース／AviUtl+PSDToolKit／AviUtl2+PSDToolKit2）。設定は環境ごとに独立です。<LineBreak/>
+                                ・「投げ込み」タブの「<Run FontWeight="SemiBold">状態更新</Run>」で「接続OK」「プロジェクト読込済み」を確認（未検出＝編集ソフト/プラグイン未起動、未読込＝プロジェクトを開く）。<LineBreak/>
+                                ・「<Run FontWeight="SemiBold">音声の保存</Run>」タブの「<Run FontWeight="SemiBold">① 保存フォルダ</Run>」に合成音声ソフトの書き出し先を追加（全モード共通。投げ込みも後処理もここを見ます）。<LineBreak/>
+                                ・同タブの「<Run FontWeight="SemiBold">② 保存後の整理</Run>」で日時などを付けて改名、「<Run FontWeight="SemiBold">③ 整えた後の置き場所</Run>」で YMM4 のカスタムボイスフォルダ等へ移動できます（どちらも任意）。<LineBreak/>
                                 ・<Run FontWeight="SemiBold">既定レイヤー</Run>、<Run FontWeight="SemiBold">投入後シークをアイテム終端へ</Run>（既定ON＝音声長ぶんカーソルが進む）、安定待ち(ms)、margin（AviUtl2のみ）。<LineBreak/>
                                 ・<Run FontWeight="SemiBold">話者ルール</Run>：「行を追加」で「_話者_ / -話者-」を抽出する既定パターンが入ります。話者名を空にすると ( ) 内を話者名として抽出。特定話者を別レイヤーにしたい場合は、その話者用の行を上に追加（上から順に評価）。
                             </TextBlock>
@@ -135,11 +136,11 @@
                                 CornerRadius="6" Padding="14">
                             <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
                                 <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">D. 動作確認の手順</Run><LineBreak/>
-                                1. 「状態更新」で接続を確認 → 2. 「今すぐ投げる（テスト）」で wav を選び疎通確認 → 3. 監視フォルダを保存し、書き出し（または保存マクロ）で自動投入を確認。<LineBreak/><LineBreak/>
+                                1. 「状態更新」で接続を確認 → 2. 「今すぐ投げる（テスト）」で wav を選び疎通確認 → 3. 「音声の保存」タブ① に保存フォルダを登録し、書き出し（または保存マクロ）で自動投入を確認。<LineBreak/><LineBreak/>
                                 <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">E. うまくいかないとき</Run><LineBreak/>
                                 ・「未検出」→ 編集ソフトとプラグインの起動／「未読込」→ プロジェクトを開く<LineBreak/>
                                 ・字幕が文字化け → 文字コード設定／字幕が出ない → 発動条件②と、同フォルダに同名 txt があるか<LineBreak/>
-                                ・監視が反応しない → フォルダのパス／OKで保存したか／書き出し先が監視フォルダか<LineBreak/>
+                                ・監視が反応しない → 「音声の保存」タブ① の状態表示を確認（保存フォルダが未登録／合成音声ソフトの書き出し先と一致していない、が主な原因）<LineBreak/>
                                 ・<Run FontWeight="SemiBold">かんしくん併用の注意</Run>：同じフォルダを両方が処理すると二重投入になります。V-Adapter 単体で使う場合はかんしくんを停止してください。<LineBreak/>
                                 ・シーク位置がアイテム終端とずれる → PSDToolKit の開始/終了マージンを 0 にする（または手動 frameAdvance を使用）
                             </TextBlock>
@@ -152,7 +153,42 @@
                     <!-- 更新履歴 -->
                     <StackPanel x:Name="SecChangelog" Visibility="Collapsed">
                         <TextBlock Text="更新履歴" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                        <!-- VoiSona Talk の推奨設定（Wiki）への導線 -->
+                        <Border Background="{StaticResource B.Accent}" BorderBrush="{StaticResource B.Primary}" BorderThickness="1"
+                                CornerRadius="6" Padding="14" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,10">
+                                    <Run FontWeight="SemiBold" Foreground="{StaticResource B.PrimaryDark}">VoiSona Talk をお使いの方へ</Run><LineBreak/>
+                                    v0.0.7 から、組込マクロ「音声の保存」が VoiSona Talk の
+                                    <Run FontWeight="SemiBold">クイックエクスポート</Run>（既定 Ctrl+E）に対応しました。
+                                    VoiSona Talk 側の設定が必要なため、Wiki の手順をご確認ください。
+                                </TextBlock>
+                                <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="OnOpenVoiSonaWiki">
+                                    <TextBlock Text="VoiSona Talk 推奨設定を開く（ブラウザ）" Foreground="White"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.7 (β)</Run><LineBreak/>
+                            <Run FontWeight="SemiBold">［既定マクロの変更］</Run><LineBreak/>
+                            ・VoiSona Talk の「音声の保存」をクイックエクスポート（既定 Ctrl+E）に対応。ダイアログを介さず WAV と TXT が同時に書き出されます（設定手順は上のボタンから Wiki をご覧ください）<LineBreak/>
+                            <Run FontWeight="SemiBold">［画面の変更］</Run><LineBreak/>
+                            ・メイン画面の情報量を調整してシンプルに。「対象アプリ管理」ボタンを設定側へ移動<LineBreak/>
+                            ・送信先を「自動 / 手動」の切り替えに変更<LineBreak/>
+                            ・設定画面のボタンを役割ごとに色分け・アイコン付与<LineBreak/>
+                            ・設定に「音声の保存」タブを追加。保存先の指定・リネーム・監視先への移動をまとめて行えるように<LineBreak/>
+                            ・監視フォルダの設定を 1 箇所に統合<LineBreak/>
+                            ・VOICEROID2 の保存先解決を「合成音声ソフト」タブへ移動<LineBreak/>
+                            <Run FontWeight="SemiBold">［機能追加］</Run><LineBreak/>
+                            ・保存後の整理（後処理）を追加（設定 →「音声の保存」タブ。既定 OFF）。合成音声ソフトが書き出した「同名 wav + txt」を、保存された後に V-Adapter が引き取って整えます<LineBreak/>
+                            ・話者名の既定の抽出パターンを、先頭の日時を読み飛ばすように変更。登録済みの話者ルールは変更していません（今回のリネーム処理に合わせる場合は新しく追加し直してください）<LineBreak/>
+                            <Run FontWeight="SemiBold">［修正］</Run><LineBreak/>
+                            ・VOICEROID2 で、字幕 txt が音声 wav と別のフォルダへ書き出される問題を修正<LineBreak/>
+                            ・VOICEROID2 のユーザープリセットでキャラクターを判定できない問題を修正<LineBreak/>
+                            ・マクロ未選択でも「実行」が有効に見える問題を修正<LineBreak/>
+                            ・メイン画面「対象アプリ」列の並び順を、マクロ編集画面のスクリプト一覧と統一<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.6 (β)</Run><LineBreak/>
                             ・複数環境での動作確認が取れたため、α 版から β 版へ移行<LineBreak/>
                             ・AviUtl・AviUtl2 連携において、複数の話者ルールを設定しても先頭行のルールしか適用されない不具合を修正<LineBreak/>

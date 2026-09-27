@@ -14,6 +14,10 @@ public partial class HelpWindow : Window
     private const string AviutlWikiUrl =
         "https://github.com/bluemistel/V-Adapter/wiki/AviUtl%E3%83%BBAviUtl2%E9%80%A3%E6%90%BA";
 
+    /// <summary>VoiSona Talk 推奨設定（1.3.9.1以降）。クイックエクスポート対応で必要になる設定手順。</summary>
+    private const string VoiSonaWikiUrl =
+        "https://github.com/bluemistel/V-Adapter/wiki/VoiSona-Talk%E6%8E%A8%E5%A5%A8%E8%A8%AD%E5%AE%9A%281.3.9.1%E4%BB%A5%E9%99%8D%29";
+
     private readonly UpdateService _updateService = new();
 
     public HelpWindow()
@@ -92,6 +96,20 @@ public partial class HelpWindow : Window
             MessageBox.Show(
                 $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{AviutlWikiUrl}\n\n{ex.Message}",
                 "AviUtl・AviUtl2 連携", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void OnOpenVoiSonaWiki(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(VoiSonaWikiUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{VoiSonaWikiUrl}\n\n{ex.Message}",
+                "VoiSona Talk 推奨設定", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 

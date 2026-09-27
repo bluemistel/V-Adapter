@@ -30,7 +30,9 @@ public sealed partial class MacroRow : ObservableObject
             if (Model.Scripts.Count == 0)
                 return "(スクリプトなし)";
 
+            // 並び順はマクロ編集画面のスクリプト一覧と揃える（対象アプリ名の昇順・共通は先頭）。
             var names = Model.Scripts
+                .OrderBy(s => _library.FindTarget(s.TargetApplicationId)?.Name ?? "", StringComparer.CurrentCulture)
                 .Select(s => s.TargetApplicationId is null
                     ? "共通"
                     : _library.FindTarget(s.TargetApplicationId)?.Name ?? "(不明)")

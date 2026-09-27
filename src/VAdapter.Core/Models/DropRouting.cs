@@ -61,5 +61,39 @@ public static class DropRouting
         return new Route(null, config.DefaultLayer, null);
     }
 
+    /// <summary>
+    /// ファイル名から話者名だけを抽出する（レイヤー振り分けは行わない）。
+    ///
+    /// 話者ルールは AviUtl 系の投げ込み設定に属するため、マクロ動作ベース（YMM4 等）では存在しない。
+    /// 一方でファイル名の付き方（<c>01_ついなちゃん_テストです</c> 等）はどの連携環境でも同じなので、
+    /// 後処理の改名・話者サブフォルダではこちらを使い、環境に依らず話者名を扱えるようにする。
+    /// </summary>
+    /// <param name="fileName">ファイル名（拡張子含む・ディレクトリ除く）。</param>
+    /// <param name="pattern">抽出パターン。空なら <see cref="SpeakerRule.DefaultNamePattern"/>。</param>
+    /// <returns>グループ1で捕捉した話者名。抽出できなければ null。</returns>
+    public static string? ExtractSpeaker(string fileName, string? pattern)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return null;
+
+        var effective = string.IsNullOrWhiteSpace(pattern) ? SpeakerRule.DefaultNamePattern : pattern;
+
+        Match match;
+        try
+        {
+            match = Regex.Match(fileName, effective, RegexOptions.IgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return null; // 不正な正規表現は「抽出できなかった」扱いにする。
+        }
+
+        if (!match.Success || match.Groups.Count <= 1 || !match.Groups[1].Success)
+            return null;
+
+        var speaker = match.Groups[1].Value.Trim();
+        return speaker.Length == 0 ? null : speaker;
+    }
+
     private static bool IsBlank(string? s) => string.IsNullOrWhiteSpace(s);
 }

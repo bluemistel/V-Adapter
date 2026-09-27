@@ -12,7 +12,7 @@ public class IntegrationSettingsTests
         s.AviUtl.DefaultLayer = 3;
         s.AviUtl.FrameAdvance = 12;
         s.AviUtl.StableWaitMs = 2000;
-        s.AviUtl.Folders.Add(new WatchFolder { Path = @"C:\voice\out", IncludeSubdirectories = true });
+        s.WatchFolders.Add(new WatchFolder { Path = @"C:\voice\out", IncludeSubdirectories = true });
         s.AviUtl.Rules.Add(new SpeakerRule { NamePattern = @"_ずんだもん_", SpeakerName = "ずんだもん", Layer = 5 });
         s.AviUtl2.DefaultLayer = 1;
         s.AviUtl2.Margin = 10;
@@ -29,7 +29,7 @@ public class IntegrationSettingsTests
         Assert.Equal(IntegrationMode.AviUtl, restored!.ActiveMode);
         Assert.Equal(3, restored.AviUtl.DefaultLayer);
         Assert.Equal(12, restored.AviUtl.FrameAdvance);
-        var folder = Assert.Single(restored.AviUtl.Folders);
+        var folder = Assert.Single(restored.WatchFolders);
         Assert.True(folder.IncludeSubdirectories);
         var rule = Assert.Single(restored.AviUtl.Rules);
         Assert.Equal("ずんだもん", rule.SpeakerName);

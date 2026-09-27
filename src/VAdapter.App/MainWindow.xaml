@@ -47,6 +47,16 @@
                           Stroke="{StaticResource B.TextTertiary}" StrokeThickness="1.7"
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
                 </Button>
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" VerticalAlignment="Center"
+                        Height="30" Padding="9,0" Margin="0,0,4,0" Click="OnOpenIntegration"
+                        Foreground="{StaticResource B.TextTertiary}" ToolTip="連携・投げ込み・対象アプリの設定">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Width="15" Height="15" Stretch="Uniform" Data="{StaticResource I.Settings}"
+                              Stroke="{StaticResource B.TextTertiary}" StrokeThickness="1.7" Margin="0,0,6,0"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                        <TextBlock Text="設定" VerticalAlignment="Center" FontSize="12"/>
+                    </StackPanel>
+                </Button>
             </DockPanel>
         </Border>
 
@@ -74,25 +84,14 @@
 
         <!-- ════════ ツールバー ════════ -->
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,10,12,8">
-            <Button Style="{StaticResource PrimaryButton}" Height="34" Click="OnManageTargets"
-                    ToolTip="対象アプリの登録・編集">
-                <StackPanel Orientation="Horizontal">
-                    <Path Width="15" Height="15" Stretch="Uniform" Data="{StaticResource I.Grid}"
-                          Stroke="White" StrokeThickness="1.8" Margin="0,0,7,0"/>
-                    <TextBlock Text="対象アプリ管理" VerticalAlignment="Center" Foreground="White"/>
-                </StackPanel>
-            </Button>
-            <Button Style="{StaticResource SuccessButton}" Height="34" Margin="8,0,0,0" Click="OnRunMacro" ToolTip="選択中のマクロを実行">
+            <Button x:Name="RunButton" Style="{StaticResource SuccessButton}" Height="34" IsEnabled="False"
+                    Click="OnRunMacro" ToolTip="選択中のマクロを実行">
                 <StackPanel Orientation="Horizontal">
                     <Path Width="14" Height="14" Stretch="Uniform" Data="{StaticResource I.Play}"
                           Fill="White" Margin="0,0,6,0"/>
                     <TextBlock Text="実行" VerticalAlignment="Center" Foreground="White"/>
                 </StackPanel>
             </Button>
-            <Button Height="34" Margin="8,0,0,0" Click="OnOpenIntegration" ToolTip="AviUtl/AviUtl2 連携の設定">
-                <TextBlock Text="連携設定" VerticalAlignment="Center"/>
-            </Button>
-
             <Border Width="1" Height="20" Background="{StaticResource B.Border}" Margin="10,0"/>
 
             <ToggleButton x:Name="OpsToggle" Style="{StaticResource GhostToggle}" ToolTip="マクロの操作">
@@ -142,7 +141,8 @@
                         <Path Width="13" Height="13" Stretch="Uniform" Data="{StaticResource I.Trash}"
                               Stroke="{StaticResource B.Danger}" StrokeThickness="1.7"
                               StrokeStartLineCap="Round" StrokeLineJoin="Round" Margin="0,0,5,0"/>
-                        <TextBlock Text="削除" VerticalAlignment="Center"/>
+                        <TextBlock Text="削除" VerticalAlignment="Center"
+                                   Foreground="{StaticResource B.Danger}"/>
                     </StackPanel>
                 </Button>
                 <Border Width="1" Height="18" Background="{StaticResource B.Border}" Margin="3,0,9,0"/>
@@ -232,7 +232,7 @@
                         </Border>
 
                         <ListBox x:Name="MacroList" Background="Transparent" BorderThickness="0"
-                                 MouseDoubleClick="OnEditMacro" Padding="0">
+                                 MouseDoubleClick="OnEditMacro" SelectionChanged="OnMacroSelectionChanged" Padding="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Height="36" Margin="8,0">
@@ -279,18 +279,31 @@
             <Border Grid.Column="1" Background="{StaticResource B.Surface}" CornerRadius="8"
                     BorderBrush="{StaticResource B.Border}" BorderThickness="1">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Margin="12,11,12,8">
+                    <StackPanel DockPanel.Dock="Top" Margin="12,11,12,0">
                         <TextBlock Text="送信先" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
-                        <TextBlock Text="マクロの送信先を選択" FontSize="11" Foreground="{StaticResource B.TextMuted}"
-                                   Margin="0,3,0,0" TextWrapping="Wrap"/>
+
+                        <!-- 自動／手動 の切替。既定は自動で、普段は一覧を出さない。 -->
+                        <Border Margin="0,8,0,0" CornerRadius="6" Padding="2"
+                                Background="{StaticResource B.HoverBg}"
+                                BorderBrush="{StaticResource B.Border}" BorderThickness="1">
+                            <UniformGrid Columns="2">
+                                <ToggleButton x:Name="AutoModeToggle" Style="{StaticResource SegmentToggle}"
+                                              Content="自動" IsChecked="True" Click="OnSendModeAuto"/>
+                                <ToggleButton x:Name="ManualModeToggle" Style="{StaticResource SegmentToggle}"
+                                              Content="手動" Click="OnSendModeManual"/>
+                            </UniformGrid>
+                        </Border>
+
+                        <TextBlock x:Name="AutoModeHint" Margin="0,9,0,0" FontSize="11" TextWrapping="Wrap"
+                                   LineHeight="17" Foreground="{StaticResource B.TextMuted}"
+                                   Text="前面にある合成音声ソフトを自動で認識してマクロを実行します。"/>
+                        <TextBlock x:Name="ManualModeHint" Margin="0,9,0,2" FontSize="11" TextWrapping="Wrap"
+                                   Visibility="Collapsed" Foreground="{StaticResource B.TextMuted}"
+                                   Text="送信先を固定します。"/>
                     </StackPanel>
-                    <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource B.BorderLight}" BorderThickness="0,1,0,0"
-                            Padding="10,8,10,10">
-                        <Button Style="{StaticResource GhostButton}" Height="30" HorizontalAlignment="Stretch"
-                                Foreground="{StaticResource B.TextTertiary}" FontWeight="Normal" FontSize="12"
-                                Content="自動判定に戻す" Click="OnClearActiveTarget"/>
-                    </Border>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,0">
+
+                    <ScrollViewer x:Name="ManualPane" Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto" Padding="10,6,10,10">
                         <StackPanel x:Name="TargetSwitcher"/>
                     </ScrollViewer>
                 </DockPanel>

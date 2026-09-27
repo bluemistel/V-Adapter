@@ -22,6 +22,8 @@ public sealed class DropPipeline : IDisposable
     private IntegrationMode _mode = IntegrationMode.MacroOnly;
     private AviutlDropConfig? _config;
     private IImportAdapter? _adapter;
+    private FilePostProcessOptions _post = new();
+    private List<WatchFolder> _watchFolders = new();
 
     private static readonly string AppVersion =
         Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? string.Empty;
@@ -48,24 +50,34 @@ public sealed class DropPipeline : IDisposable
             _mode = settings.ActiveMode;
             _config = settings.ConfigFor(_mode);
             _adapter = CreateAdapter(_mode, settings);
+            _post = settings.PostProcess;
+            _watchFolders = settings.WatchFolders
+                .Where(f => !string.IsNullOrWhiteSpace(f.Path))
+                .ToList();
         }
 
-        if (_adapter is null || _config is null)
+        // 投げ込みが無効（マクロ動作ベース）でも、後処理が有効なら監視は必要。
+        var dropping = _adapter is not null && _config is not null;
+        if (!dropping && !_post.Enabled)
         {
             _watcher.Stop();
             Log?.Invoke("連携モード: マクロ動作ベース（投げ込み監視は無効）");
             return;
         }
 
-        if (_config.Folders.Count == 0)
+        var folders = _watchFolders;
+        if (folders.Count == 0)
         {
             _watcher.Stop();
-            Log?.Invoke($"連携モード: {_adapter.DisplayName}（監視フォルダ未設定）");
+            Log?.Invoke(dropping
+                ? $"連携モード: {_adapter!.DisplayName}（監視フォルダ未設定）"
+                : "後処理: 監視フォルダが未設定のため停止しています。");
             return;
         }
 
-        _watcher.Start(_config.Folders.Select(f => (f.Path, f.IncludeSubdirectories)), _config.StableWaitMs);
-        Log?.Invoke($"連携モード: {_adapter.DisplayName}（監視中）");
+        _watcher.Start(folders.Select(f => (f.Path, f.IncludeSubdirectories)), _config?.StableWaitMs ?? 1500);
+        var role = dropping ? _adapter!.DisplayName : "後処理のみ";
+        Log?.Invoke($"連携モード: {role}（監視中{(_post.Enabled ? " / 後処理 有効" : "")}）");
     }
 
     /// <summary>現在適用中のアダプタの状態（MacroOnly のときは null）。</summary>
@@ -108,24 +120,47 @@ public sealed class DropPipeline : IDisposable
     {
         IImportAdapter? adapter;
         AviutlDropConfig? config;
-        lock (_gate) { adapter = _adapter; config = _config; }
-        if (adapter is null || config is null)
+        FilePostProcessOptions post;
+        lock (_gate) { adapter = _adapter; config = _config; post = _post; }
+        if (adapter is null && !post.Enabled)
             return;
 
         var name = Path.GetFileName(wavPath);
-        var route = DropRouting.Resolve(name, config);
-        var speaker = route.Speaker is null ? "" : $"（{route.Speaker}）";
-        Log?.Invoke($"検知: {name}{speaker} → トラック {route.Layer}");
+
+        // 話者は「改名前の」ファイル名から解決する。後処理で名前を変えると
+        // 話者ルールの正規表現が別の位置を拾ってしまうため、順序を入れ替えない。
+        DropRouting.Route? route = config is not null ? DropRouting.Resolve(name, config) : null;
+        var speakerLabel = route?.Speaker is { } s ? $"（{s}）" : "";
+        Log?.Invoke(route is { } r
+            ? $"検知: {name}{speakerLabel} → トラック {r.Layer}"
+            : $"検知: {name}");
+
+        // 後処理用の話者名。話者ルールで決まればそれを使い、
+        // ルールが無い連携環境（マクロ動作ベース）ではファイル名から直接抽出する。
+        // 投げ込みのレイヤー振り分けには影響させない。
+        var speaker = route?.Speaker ?? DropRouting.ExtractSpeaker(name, post.SpeakerPattern);
+
+        var subtitle = File.Exists(txtPath) ? txtPath : null;
+
+        // 後処理（改名・移動）。失敗しても投げ込みは元のパスで続行される。
+        var processed = FilePostProcessor.Run(wavPath, subtitle, speaker, post);
+        foreach (var m in processed.Messages)
+            Log?.Invoke(m);
+        foreach (var produced in processed.ProducedAudioPaths)
+            _watcher.Ignore(produced);
+
+        if (adapter is null || config is null || route is not { } resolved)
+            return;
 
         // wav と同名 txt を一緒に投入する（PSDToolKit の発動条件②に合わせる）。
-        var subtitle = File.Exists(txtPath) ? txtPath : null;
         var payload = DropPayloadFactory.Create(
-            wavPath, subtitle, route.Speaker, route.Layer,
+            processed.AudioPath, processed.SubtitlePath, resolved.Speaker, resolved.Layer,
             config.AdvanceToItemEnd, AppVersion);
 
         var result = adapter.Import(payload);
+        var finalName = Path.GetFileName(processed.AudioPath);
         Log?.Invoke(result.Success
-            ? $"投入成功: {name}{(result.Info is { } i ? $"（{i}）" : "")}"
+            ? $"投入成功: {finalName}{(result.Info is { } i ? $"（{i}）" : "")}"
             : $"投入失敗: {result.Error}");
     }
 

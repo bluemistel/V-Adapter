@@ -327,6 +327,12 @@ public sealed class WriteSubtitleInstruction : Instruction
     /// <summary>字幕本文を保持する変数名。</summary>
     public string TextVariable { get; set; } = "serifu";
 
+    /// <summary>
+    /// 音声ファイルが実際に保存されるのを待つ上限（ミリ秒）。
+    /// 保存ダイアログの既定フォルダが設定と異なる場合に、実際の保存先へ字幕を追従させるために使う。
+    /// </summary>
+    public int WaitForAudioMs { get; set; } = 5000;
+
     [JsonIgnore]
     public override string Summary => $"字幕テキストの書き出し（{{{TextVariable}}} → {{{PathVariable}}}.txt, UTF-8）";
 }

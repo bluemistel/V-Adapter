@@ -4,6 +4,7 @@
         Title="V-Adapter — 合成音声マクロ" Height="560" Width="760"
         MinHeight="460" MinWidth="640"
         WindowStartupLocation="CenterScreen"
+        Icon="Resources/app_icon.ico"
         Background="{StaticResource B.AppBg}">
 
     <DockPanel>
@@ -11,9 +12,10 @@
         <Border DockPanel.Dock="Top" Height="42" Background="{StaticResource B.Surface}"
                 BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,0,1">
             <DockPanel LastChildFill="False" Margin="12,0">
-                <Path DockPanel.Dock="Left" VerticalAlignment="Center" Width="19" Height="19" Stretch="Uniform"
-                      Data="{StaticResource I.Mic}" Stroke="{StaticResource B.Primary}" StrokeThickness="1.7"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                <!-- 小さく描くため、縮小品質を明示して輪郭のにじみを抑える -->
+                <Image DockPanel.Dock="Left" VerticalAlignment="Center" Width="20" Height="20"
+                       Source="Resources/app_icon.png" Stretch="Uniform"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
                 <TextBlock DockPanel.Dock="Left" Text="V-Adapter" VerticalAlignment="Center" Margin="9,0,0,0"
                            FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}"/>
                 <TextBlock DockPanel.Dock="Left" Text="合成音声マクロ" VerticalAlignment="Center" Margin="9,1,0,0"
@@ -57,28 +59,13 @@
                         <TextBlock Text="設定" VerticalAlignment="Center" FontSize="12"/>
                     </StackPanel>
                 </Button>
-            </DockPanel>
-        </Border>
-
-        <!-- ════════ 更新バナー（新しいバージョン検出時のみ） ════════ -->
-        <Border x:Name="UpdateBanner" DockPanel.Dock="Top" Visibility="Collapsed"
-                Background="{StaticResource B.Accent}" BorderBrush="{StaticResource B.Primary}"
-                BorderThickness="0,0,0,1" Padding="12,8">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource PrimaryButton}" Height="30" Click="OnOpenDownload"
-                            ToolTip="ダウンロードページ（GitHub Releases）を開く">
-                        <TextBlock Text="ダウンロード" Foreground="White"/>
-                    </Button>
-                    <Button Style="{StaticResource GhostButton}" Height="30" Width="30" Padding="0" Margin="8,0,0,0"
-                            Click="OnDismissUpdate" ToolTip="閉じる"
-                            Foreground="{StaticResource B.TextTertiary}" Content="✕"/>
-                </StackPanel>
-                <Path DockPanel.Dock="Left" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"
-                      Margin="0,0,8,0" Data="{StaticResource I.Power}" Stroke="{StaticResource B.Primary}"
-                      StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                <TextBlock x:Name="UpdateText" VerticalAlignment="Center" TextWrapping="Wrap"
-                           Foreground="{StaticResource B.PrimaryDark}"/>
+                <!-- DockPanel は宣言順に右端から詰むため、「設定」より後に置くとその左隣になる。
+                     更新が見つかったときだけ表示する。 -->
+                <Button x:Name="UpdateChip" DockPanel.Dock="Right" Style="{StaticResource UpdateChipButton}"
+                        VerticalAlignment="Center" Height="22" Margin="0,0,8,0" Visibility="Collapsed"
+                        Click="OnOpenUpdateHelp">
+                    <TextBlock x:Name="UpdateChipText" Text="更新" Foreground="White" VerticalAlignment="Center"/>
+                </Button>
             </DockPanel>
         </Border>
 

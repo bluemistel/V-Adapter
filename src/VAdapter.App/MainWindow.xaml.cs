@@ -60,21 +60,32 @@ public partial class MainWindow : Window
 
     private readonly Services.UpdateService _updateService = new();
 
+    /// <summary>
+    /// 起動時に一度だけ更新を確認する。見つかった場合はヘッダーにチップを出すだけに留め、
+    /// 作業画面を占有しないようにする。長時間起動したままの場合は、
+    /// 「使い方 → アップデート」の「最新版を確認」から手動で確認できる。
+    /// </summary>
     private async Task CheckForUpdateAsync()
     {
         var result = await _updateService.CheckAsync();
         if (result is not { UpdateAvailable: true, Latest: { } latest })
             return;
 
-        UpdateText.Text = $"新しいバージョン v{latest.Major}.{latest.Minor}.{latest.Build} が公開されています"
-            + $"（現在 v{result.Current.Major}.{result.Current.Minor}.{result.Current.Build}）。";
-        UpdateBanner.Visibility = Visibility.Visible;
-        Log($"更新あり: v{latest.Major}.{latest.Minor}.{latest.Build}");
+        var version = $"v{latest.Major}.{latest.Minor}.{latest.Build}";
+        UpdateChipText.Text = $"更新 {version}";
+        UpdateChip.ToolTip = $"新しいバージョン {version} が公開されています"
+            + $"（現在 v{result.Current.Major}.{result.Current.Minor}.{result.Current.Build}）。"
+            + "クリックすると詳細を表示します。";
+        UpdateChip.Visibility = Visibility.Visible;
+        Log($"更新あり: {version}");
     }
 
-    private void OnOpenDownload(object sender, RoutedEventArgs e) => OpenReleasesPage();
-
-    private void OnDismissUpdate(object sender, RoutedEventArgs e) => UpdateBanner.Visibility = Visibility.Collapsed;
+    /// <summary>更新チップから「使い方 → アップデート」を直接開く。</summary>
+    private void OnOpenUpdateHelp(object sender, RoutedEventArgs e)
+    {
+        var window = new Views.HelpWindow(Views.HelpWindow.Section.Update) { Owner = this };
+        window.ShowDialog();
+    }
 
     private static void OpenReleasesPage()
     {

@@ -24,6 +24,9 @@
     <SolidColorBrush x:Key="B.DangerHover" Color="#FFFAE5E5"/>
     <SolidColorBrush x:Key="B.Success" Color="#FF3AA76A"/>
     <SolidColorBrush x:Key="B.SuccessHover" Color="#FF2F8F59"/>
+    <!-- 更新告知のオレンジ。白文字とのコントラスト比 4.5:1 を確保した濃さにしている。 -->
+    <SolidColorBrush x:Key="B.Update" Color="#FFC05621"/>
+    <SolidColorBrush x:Key="B.UpdateHover" Color="#FFA34818"/>
     <SolidColorBrush x:Key="B.CheckUnchecked" Color="#FFC8CDD7"/>
 
     <!-- コントロール面: 白いカードの上でもボタンだと分かる塗り（既定＝セカンダリ） -->
@@ -42,7 +45,6 @@
     <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
     <!-- ════════ アイコン Geometry ════════ -->
-    <Geometry x:Key="I.Mic">M12,2 A3,3 0 0 1 15,5 L15,10 A3,3 0 0 1 9,10 L9,5 A3,3 0 0 1 12,2 Z M5,10 A7,7 0 0 0 19,10 M12,17 L12,21 M8,21 L16,21</Geometry>
     <Geometry x:Key="I.Pin">M12,17 L12,22 M9,3 L15,3 L14,10 L17,13 L7,13 L10,10 Z</Geometry>
     <Geometry x:Key="I.Grid">M3,3 L10,3 L10,10 L3,10 Z M14,3 L21,3 L21,10 L14,10 Z M3,14 L10,14 L10,21 L3,21 Z M14,14 L21,14 L21,21 L14,21 Z</Geometry>
     <Geometry x:Key="I.Play">M8,5 L8,19 L19,12 Z</Geometry>
@@ -154,6 +156,32 @@
                         <!-- 未選択時に「淡い緑＝押せそう」に見えないよう、無効は無彩色にする。 -->
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.Disabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 更新告知（オレンジの小さいチップ）。
+         ヘッダーに常駐する他のボタンより一段強く、かつ画面の主役にはならない大きさに留める。 -->
+    <Style x:Key="UpdateChipButton" TargetType="{x:Type Button}">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{StaticResource B.Update}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="9,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="999"
+                            Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource B.UpdateHover}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

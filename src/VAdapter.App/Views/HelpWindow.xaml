@@ -23,9 +23,8 @@
                     BorderBrush="{StaticResource B.Border}" BorderThickness="0,0,1,0">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="14,14,12,12">
-                        <Path Width="20" Height="20" Stretch="Uniform" Data="{StaticResource I.Mic}"
-                              Stroke="{StaticResource B.Primary}" StrokeThickness="1.7"
-                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                        <Image Width="20" Height="20" Source="/Resources/app_icon.png" Stretch="Uniform"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
                         <TextBlock Text="V-Adapter" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         <Border VerticalAlignment="Center" Margin="6,2,0,0" Background="{StaticResource B.Accent}"
                                 CornerRadius="999" Padding="6,1">
@@ -171,6 +170,11 @@
                         </Border>
 
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.8 (β)</Run><LineBreak/>
+                            ・アプリアイコンを設定。タスクバー・タイトルバー・画面左上にロゴが表示されます<LineBreak/>
+                            ・更新が見つかったときに、ヘッダーへ「更新」ボタンを表示するように。押すとこの「アップデート」画面が直接開きます<LineBreak/>
+                            ・更新の告知を、画面上部の横長バナーからヘッダーの小さいボタンへ変更（更新確認は従来どおり起動時に1回。手動確認は「アップデート」画面から）<LineBreak/>
+                            ・「ライセンス・免責」に制作者情報と、ニコニコ動画の親作品登録の案内を追加<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.7 (β)</Run><LineBreak/>
                             <Run FontWeight="SemiBold">［既定マクロの変更］</Run><LineBreak/>
                             ・VoiSona Talk の「音声の保存」をクイックエクスポート（既定 Ctrl+E）に対応。ダイアログを介さず WAV と TXT が同時に書き出されます（設定手順は上のボタンから Wiki をご覧ください）<LineBreak/>
@@ -273,6 +277,24 @@
                             本ソフトウェアは MIT ライセンスで提供される<Run FontWeight="SemiBold">非公式・無保証</Run>のツールです。本ソフトウェアを使用したこと及び使用しなかったことによるいかなる損害についても、作者は責任を負いません。これに同意できない場合は使用しないでください。<LineBreak/>
                             合成音声ソフト・動画編集ソフト・各プラグインの利用規約・ライセンスは、各配布元の定めに従ってください。
                         </TextBlock>
+                        <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}" Margin="0,0,0,12">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">ニコニコ動画での親作品登録について</Run><LineBreak/>
+                            登録は任意ですが、<Hyperlink NavigateUri="https://commons.nicovideo.jp/works/nc507599"
+                                                        RequestNavigate="OnNavigate">nc507599</Hyperlink> を親作品登録頂けると励みになります。
+                        </TextBlock>
+                        <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
+                                CornerRadius="6" Padding="14" Margin="0,0,0,12">
+                            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                                <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">制作者</Run><LineBreak/>
+                                あおもや<LineBreak/>
+                                X (旧 Twitter)：<Hyperlink NavigateUri="https://x.com/bluemist_im"
+                                                          RequestNavigate="OnNavigate">bluemist_im</Hyperlink><LineBreak/>
+                                GitHub：<Hyperlink NavigateUri="https://github.com/bluemistel"
+                                                  RequestNavigate="OnNavigate">bluemistel</Hyperlink><LineBreak/>
+                                サイト：<Hyperlink NavigateUri="https://aomoya.com/"
+                                                  RequestNavigate="OnNavigate">https://aomoya.com/</Hyperlink>
+                            </TextBlock>
+                        </Border>
                         <Border Background="{StaticResource B.HoverBg}" BorderBrush="{StaticResource B.Border}" BorderThickness="1"
                                 CornerRadius="6" Padding="14">
                             <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">

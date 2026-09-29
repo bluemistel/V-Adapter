@@ -18,12 +18,23 @@ public partial class HelpWindow : Window
     private const string VoiSonaWikiUrl =
         "https://github.com/bluemistel/V-Adapter/wiki/VoiSona-Talk%E6%8E%A8%E5%A5%A8%E8%A8%AD%E5%AE%9A%281.3.9.1%E4%BB%A5%E9%99%8D%29";
 
+    /// <summary>左メニューの節。値は <c>MenuList</c> の並び順と一致させること。</summary>
+    public enum Section
+    {
+        Basic = 0,
+        Aviutl = 1,
+        Changelog = 2,
+        Update = 3,
+        Report = 4,
+        License = 5,
+    }
+
     private readonly UpdateService _updateService = new();
 
-    public HelpWindow()
+    public HelpWindow(Section section = Section.Basic)
     {
         InitializeComponent();
-        MenuList.SelectedIndex = 0;
+        MenuList.SelectedIndex = (int)section;
 
         VersionBadge.Text = UpdateService.DisplayVersion;
         var v = UpdateService.CurrentVersion();
@@ -97,6 +108,23 @@ public partial class HelpWindow : Window
                 $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{AviutlWikiUrl}\n\n{ex.Message}",
                 "AviUtl・AviUtl2 連携", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+    }
+
+    /// <summary>本文中のリンク（制作者情報など）を既定のブラウザで開く。</summary>
+    private void OnNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        var url = e.Uri.ToString();
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"ブラウザを開けませんでした。URL を手動で開いてください。\n\n{url}\n\n{ex.Message}",
+                "リンクを開く", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        e.Handled = true;
     }
 
     private void OnOpenVoiSonaWiki(object sender, RoutedEventArgs e)

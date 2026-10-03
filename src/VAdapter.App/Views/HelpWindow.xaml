@@ -170,6 +170,8 @@
                         </Border>
 
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.9 (β)</Run><LineBreak/>
+                            ・同じ名前のファイルを続けて書き出したとき、2回目以降が取り込まれない問題を修正。合成音声ソフト側が毎回同じ名前で保存する構成でも、保存のたびに後処理・投げ込みが動くようになりました<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.8 (β)</Run><LineBreak/>
                             ・アプリアイコンを設定。タスクバー・タイトルバー・画面左上にロゴが表示されます<LineBreak/>
                             ・更新が見つかったときに、ヘッダーへ「更新」ボタンを表示するように。押すとこの「アップデート」画面が直接開きます<LineBreak/>

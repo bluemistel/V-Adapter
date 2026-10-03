@@ -4,7 +4,7 @@
 
 **合成音声ソフトの操作を、統一ショートカットから半自動化する Windows デスクトップ向けマクロツール**
 
-[![version](https://img.shields.io/badge/version-0.0.8%20(beta)-blue)](https://github.com/bluemistel/V-Adapter/releases)
+[![version](https://img.shields.io/badge/version-0.0.9%20(beta)-blue)](https://github.com/bluemistel/V-Adapter/releases)
 [![platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6)](https://github.com/bluemistel/V-Adapter)
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
 

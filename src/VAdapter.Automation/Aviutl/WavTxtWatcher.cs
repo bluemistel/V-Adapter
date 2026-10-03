@@ -13,9 +13,15 @@ public sealed class WavTxtWatcher : IDisposable
 
     // path → 初検知時刻
     private readonly Dictionary<string, DateTime> _pending = new(StringComparer.OrdinalIgnoreCase);
-    // path → 処理時刻（二重防止・一定時間で掃除）
-    private readonly Dictionary<string, DateTime> _processed = new(StringComparer.OrdinalIgnoreCase);
+    // path → 処理時刻と、そのとき処理したファイルの実体（二重防止・一定時間で掃除）
+    private readonly Dictionary<string, Processed> _processed = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, long> _lastSize = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>ファイルの実体を見分けるための情報（サイズと更新時刻）。</summary>
+    private readonly record struct FileStamp(long Size, long LastWriteTicks);
+
+    /// <summary>処理済みの記録。<see cref="Stamp"/> が null は「記録時に実体を読めなかった」。</summary>
+    private readonly record struct Processed(DateTime At, FileStamp? Stamp);
 
     private System.Threading.Timer? _timer;
     private int _stableWaitMs = 1500;
@@ -83,11 +89,27 @@ public sealed class WavTxtWatcher : IDisposable
     {
         if (string.IsNullOrWhiteSpace(wavPath))
             return;
+
+        var stamp = ReadStamp(wavPath);
         lock (_gate)
         {
             _pending.Remove(wavPath);
             _lastSize.Remove(wavPath);
-            _processed[wavPath] = DateTime.UtcNow;
+            _processed[wavPath] = new Processed(DateTime.UtcNow, stamp);
+        }
+    }
+
+    /// <summary>ファイルの実体情報を読む。存在しない・読めない場合は null。</summary>
+    private static FileStamp? ReadStamp(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            return info.Exists ? new FileStamp(info.Length, info.LastWriteTimeUtc.Ticks) : null;
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -103,12 +125,41 @@ public sealed class WavTxtWatcher : IDisposable
         // 改名後の最終ファイルが別途 Renamed で通知されるため、取りこぼしにはならない。
         if (VAdapter.Core.Media.TransientFile.IsTransient(path))
             return;
+
+        // 実体の読み取りはロックの外で行う（ロックを短く保つ）。
+        var stamp = ReadStamp(path);
+
         lock (_gate)
         {
-            if (_processed.ContainsKey(path) || _pending.ContainsKey(path))
+            if (_pending.ContainsKey(path))
                 return;
+
+            // 同じパスでも、中身が別のファイルなら新しい出力として扱う。
+            // 合成音声ソフトは毎回同じ名前で書き出すため、パスだけで二重判定すると
+            // 同じ名前の再出力が（後処理で移動済みでも）無視されてしまう。
+            if (_processed.TryGetValue(path, out var done) && IsSameAsProcessed(done, stamp))
+                return;
+
             _pending[path] = DateTime.UtcNow;
         }
+    }
+
+    /// <summary>
+    /// 処理済みとして記録したファイルが、いまもそのパスに同じ実体で存在するか。
+    /// 移動・改名・差し替えが起きていれば false（＝新しい出力として扱う）。
+    /// </summary>
+    private static bool IsSameAsProcessed(Processed done, FileStamp? current)
+    {
+        // 既に無い（後処理で移動した等）。同じパスに現れたものは別のファイル。
+        if (current is not { } now)
+            return false;
+
+        // 記録時に実体を読めていなければ判断材料が無い。
+        // 二重投入を避ける側に倒し、従来どおり無視する。
+        if (done.Stamp is not { } recorded)
+            return true;
+
+        return recorded == now;
     }
 
     private void Tick(object? state)
@@ -119,7 +170,7 @@ public sealed class WavTxtWatcher : IDisposable
             snapshot = _pending.ToList();
             // 古い処理済み記録を掃除（10分）
             var cutoff = DateTime.UtcNow.AddMinutes(-10);
-            foreach (var key in _processed.Where(kv => kv.Value < cutoff).Select(kv => kv.Key).ToList())
+            foreach (var key in _processed.Where(kv => kv.Value.At < cutoff).Select(kv => kv.Key).ToList())
                 _processed.Remove(key);
         }
 
@@ -156,12 +207,13 @@ public sealed class WavTxtWatcher : IDisposable
                 continue;
             }
 
-            // 確定
+            // 確定。安定判定を通った時点の実体を控え、同名で再出力された別ファイルと区別する。
+            var stamp = ReadStamp(wav);
             lock (_gate)
             {
                 _pending.Remove(wav);
                 _lastSize.Remove(wav);
-                _processed[wav] = DateTime.UtcNow;
+                _processed[wav] = new Processed(DateTime.UtcNow, stamp);
             }
             try { PairReady?.Invoke(wav, txt); }
             catch (Exception ex) { Log?.Invoke($"投入処理で例外: {ex.Message}"); }

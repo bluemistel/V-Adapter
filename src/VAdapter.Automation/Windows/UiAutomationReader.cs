@@ -23,7 +23,7 @@ public sealed class UiAutomationReader
 
             var root = AutomationElement.FromHandle(rootWindow);
             var element = FindElement(root, selector);
-            return element is null ? null : GetText(element);
+            return element is null ? null : GetText(element, allowTextDescendant: true);
         }
         catch (Exception ex) when (ex is ElementNotAvailableException or System.Runtime.InteropServices.COMException or ArgumentException)
         {
@@ -31,13 +31,18 @@ public sealed class UiAutomationReader
         }
     }
 
-    /// <summary>スクリーン座標直下の UI 要素のテキストを取得する（実行時に都度 FromPoint で解決）。</summary>
+    /// <summary>
+    /// スクリーン座標直下の UI 要素のテキストを取得する（実行時に都度 FromPoint で解決）。
+    /// 位置がウィンドウの背景に当たった場合は、無関係な要素の値を返さないよう null とする。
+    /// </summary>
     public string? ReadTextAtPoint(int x, int y)
     {
         try
         {
             var element = AutomationElement.FromPoint(new System.Windows.Point(x, y));
-            return element is null ? null : GetText(element);
+            if (element is null || IsBackground(element))
+                return null;
+            return GetText(element, allowTextDescendant: false);
         }
         catch (Exception ex) when (ex is ElementNotAvailableException or System.Runtime.InteropServices.COMException or ArgumentException)
         {
@@ -113,6 +118,8 @@ public sealed class UiAutomationReader
             conditions.Add(new PropertyCondition(AutomationElement.NameProperty, selector.Name));
         if (!string.IsNullOrEmpty(selector.ControlType) && MapControlType(selector.ControlType!) is { } ct)
             conditions.Add(new PropertyCondition(AutomationElement.ControlTypeProperty, ct));
+        if (!string.IsNullOrEmpty(selector.ClassName))
+            conditions.Add(new PropertyCondition(AutomationElement.ClassNameProperty, selector.ClassName));
 
         if (conditions.Count == 0)
             return null;
@@ -179,7 +186,11 @@ public sealed class UiAutomationReader
         return null;
     }
 
-    private static string? GetText(AutomationElement element)
+    /// <param name="allowTextDescendant">
+    /// 要素自身に文字が無いとき、配下の最初の Text 要素の文字を使うか。
+    /// セレクタで明示した入れ物（VOICEROID2 の CharacterView 等）向けで、座標取得では使わない。
+    /// </param>
+    private static string? GetText(AutomationElement element, bool allowTextDescendant)
     {
         if (element.TryGetCurrentPattern(ValuePattern.Pattern, out var vObj) && vObj is ValuePattern vp)
         {
@@ -200,6 +211,15 @@ public sealed class UiAutomationReader
         var selName = TryGetSelectedName(element);
         if (!string.IsNullOrEmpty(selName))
             return selName;
+
+        if (allowTextDescendant)
+        {
+            var text = element.FindFirst(TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text));
+            var textName = text?.Current.Name;
+            if (!string.IsNullOrEmpty(textName))
+                return textName;
+        }
 
         var name = element.Current.Name;
         return string.IsNullOrEmpty(name) ? null : name;
@@ -230,6 +250,9 @@ public sealed class UiAutomationReader
             }
 
             // 子孫に選択中の項目があれば、その名前。
+            // ウィンドウ全体を掴んだ場合は探さない（VOICEROID2 で無関係な「標準」タブ名を拾った不具合の対策）。
+            if (IsBackground(element))
+                return null;
             var selectedChild = element.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(SelectionItemPatternIdentifiers.IsSelectedProperty, true));
             var childName = selectedChild?.Current.Name;
@@ -239,6 +262,13 @@ public sealed class UiAutomationReader
         {
             return null;
         }
+    }
+
+    /// <summary>ウィンドウそのもの（特定の部品ではない背景）か。</summary>
+    private static bool IsBackground(AutomationElement element)
+    {
+        try { return element.Current.ControlType == ControlType.Window; }
+        catch (ElementNotAvailableException) { return true; }
     }
 
     private static string? ControlTypeName(ControlType type)

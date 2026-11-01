@@ -226,14 +226,16 @@ public sealed class MacroRunner
             return MacroRunResult.Fail($"対象アプリ「{ctx.Target.Name}」のウィンドウが見つかりません。", instr);
 
         string? text = null;
+        var source = "セレクタ";
 
         // AutomationId があればセレクタで（安定）。
         if (!string.IsNullOrEmpty(instr.Selector.AutomationId))
             text = _uia.ReadText(window.Handle, instr.Selector);
 
-        // 座標ベース: 実行時に FromPoint で取り直す（VOICEROID2 等の無名 WPF 要素・動的テキストに強い）。
+        // 座標ベース: 実行時に FromPoint で取り直す（セレクタで見つからないときの予備）。
         if (text is null && instr.PointCaptured)
         {
+            source = "座標";
             var (_, _, clientW, clientH) = WindowGeometry.GetClientAreaOnScreen(window.Handle);
             var (anchorX, anchorY) = WindowGeometry.AnchorPoint(clientW, clientH, instr.Anchor);
             var (sx, sy) = WindowGeometry.ClientToScreen(window.Handle, anchorX + instr.X, anchorY + instr.Y);
@@ -244,7 +246,7 @@ public sealed class MacroRunner
             return MacroRunResult.Fail("UI要素からテキストを取得できませんでした（対象の要素・位置を再取得してください）。", instr);
 
         ctx.Variables[instr.VariableName] = text;
-        log?.Report($"    取得: {{{instr.VariableName}}} = {Trim(text)}");
+        log?.Report($"    取得（{source}）: {{{instr.VariableName}}} = {Trim(text)}");
         return MacroRunResult.Ok();
     }
 
@@ -269,8 +271,7 @@ public sealed class MacroRunner
 
         var folder = ctx.Integration?.ResolveVoiceroid2Folder(mode, character);
         if (string.IsNullOrWhiteSpace(folder))
-            return MacroRunResult.Fail(
-                $"保存先フォルダを解決できません（連携設定の VOICEROID2 オプションでキャラクター「{character}」の保存先を設定してください）。", instr);
+            return MacroRunResult.Fail(DescribeUnresolvedFolder(ctx.Integration, mode, character), instr);
         if (!Directory.Exists(folder))
             return MacroRunResult.Fail($"保存先フォルダが存在しません: {folder}", instr);
 
@@ -610,6 +611,24 @@ public sealed class MacroRunner
         return found
             ? MacroRunResult.Ok()
             : MacroRunResult.Fail($"テキスト「{wait.Text}」が {wait.TimeoutMs} ms 以内に表示されませんでした。", wait);
+    }
+
+    /// <summary>VOICEROID2 の保存先を解決できなかった理由を、読み取った話者名とともに説明する。</summary>
+    private static string DescribeUnresolvedFolder(IntegrationSettings? integration, IntegrationMode mode, string? character)
+    {
+        const string prefix = "保存先フォルダを解決できません";
+        if (integration is null)
+            return $"{prefix}（連携設定を読み込めていません）。";
+
+        if (mode != IntegrationMode.MacroOnly)
+            return $"{prefix}（「設定 > 音声の保存 > ① 保存フォルダ」にフォルダを追加してください）。";
+
+        if (integration.MatchVoiceroid2Character(character) is { } matched)
+            return $"{prefix}（キャラクター「{matched.Name}」のマクロ動作ベース保存先が未設定です。「設定 > 合成音声ソフト」で設定してください）。";
+
+        return $"{prefix}。読み取った話者名「{character}」に一致するキャラクターが登録されていません。"
+             + "「設定 > 合成音声ソフト」のキャラクター名を確認し、話者名でない値が読み取られている場合は、"
+             + "マクロの「UIから情報取得」で取得する要素を指定し直してください。";
     }
 
     private static string Trim(string text)

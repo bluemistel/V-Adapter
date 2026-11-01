@@ -38,7 +38,10 @@ public sealed class IntegrationSettingsStore
         var json = File.ReadAllText(_filePath);
         var settings = VAdapterJson.Deserialize<IntegrationSettings>(json) ?? new IntegrationSettings();
 
-        if (settings.MigrateWatchFolders())
+        // 両方の移行を必ず実行する（|| の短絡で片方が飛ばされないように）。
+        var migrated = settings.MigrateWatchFolders();
+        migrated |= settings.MigrateSpeakerPatterns();
+        if (migrated)
         {
             // 移行結果を書き戻す。失敗しても読み込み自体は成功させる（次回また移行を試みる）。
             try { Save(settings); }

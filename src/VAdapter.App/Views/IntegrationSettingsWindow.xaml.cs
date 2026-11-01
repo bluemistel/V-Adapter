@@ -314,6 +314,7 @@ public partial class IntegrationSettingsWindow : Window
         PpTemplateBox.Text = pp.NameTemplate;
         PpDestBox.Text = pp.DestinationFolder ?? string.Empty;
         PpSpeakerSubCheck.IsChecked = pp.SpeakerSubfolder;
+        PpSubfolderCharactersBox.Text = string.Join(Environment.NewLine, pp.SubfolderCharacters);
         PpPresetCombo.SelectedIndex = PresetFor(pp.NameTemplate);
 
         _loadingPostProcess = false;
@@ -347,6 +348,13 @@ public partial class IntegrationSettingsWindow : Window
         pp.NameTemplate = CurrentTemplate();
         pp.DestinationFolder = string.IsNullOrWhiteSpace(PpDestBox.Text) ? null : PpDestBox.Text.Trim();
         pp.SpeakerSubfolder = PpSpeakerSubCheck.IsChecked == true;
+        // 振り分けを OFF にしても入力内容は残す（再び ON にしたとき入れ直さなくて済むように）。
+        pp.SubfolderCharacters = PpSubfolderCharactersBox.Text
+            .Split('\n')
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
         // 旧形式（後処理専用の監視フォルダ・追加の配布先）は廃止。保存時に残さない。
         pp.Folders.Clear();
     }

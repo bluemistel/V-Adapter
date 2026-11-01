@@ -2,7 +2,7 @@ namespace VAdapter.Core.Models;
 
 /// <summary>
 /// UI Automation 要素の選択条件。対象アプリのウィンドウ配下から、AutomationId / Name /
-/// ControlType のうち指定されたものを AND 条件で照合して要素を特定する。
+/// ControlType / ClassName のうち指定されたものを AND 条件で照合して要素を特定する。
 /// 「UI要素を取得（クリック）」で捕捉した値を保持する。
 /// </summary>
 public sealed class UiElementSelector
@@ -16,11 +16,18 @@ public sealed class UiElementSelector
     /// <summary>コントロール種別（例: "Edit" / "Text" / "Document"）。</summary>
     public string? ControlType { get; set; }
 
+    /// <summary>
+    /// クラス名（ClassName プロパティ。例: VOICEROID2 の "CharacterView"）。
+    /// AutomationId が短く他の要素と重なり得るときに併用して絞り込む。
+    /// </summary>
+    public string? ClassName { get; set; }
+
     /// <summary>いずれかの条件が指定されているか。</summary>
     public bool HasAnyCondition =>
         !string.IsNullOrEmpty(AutomationId)
         || !string.IsNullOrEmpty(Name)
-        || !string.IsNullOrEmpty(ControlType);
+        || !string.IsNullOrEmpty(ControlType)
+        || !string.IsNullOrEmpty(ClassName);
 
     /// <summary>UI 表示用の要約。</summary>
     public string Describe()
@@ -29,6 +36,7 @@ public sealed class UiElementSelector
         if (!string.IsNullOrEmpty(AutomationId)) parts.Add($"id={AutomationId}");
         if (!string.IsNullOrEmpty(Name)) parts.Add($"name={Name}");
         if (!string.IsNullOrEmpty(ControlType)) parts.Add($"type={ControlType}");
+        if (!string.IsNullOrEmpty(ClassName)) parts.Add($"class={ClassName}");
         return parts.Count == 0 ? "(未設定)" : string.Join(" / ", parts);
     }
 }

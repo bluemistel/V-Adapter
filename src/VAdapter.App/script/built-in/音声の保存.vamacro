@@ -356,8 +356,9 @@
             {
               "kind": "readui",
               "selector": {
-                "name": "\u7D32\u661F\u3042\u304B\u308A",
-                "controlType": "Text",
+                "automationId": "d",
+                "controlType": "Custom",
+                "className": "CharacterView",
                 "hasAnyCondition": true
               },
               "pointCaptured": true,

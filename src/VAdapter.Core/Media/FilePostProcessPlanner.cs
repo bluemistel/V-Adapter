@@ -35,9 +35,10 @@ public static class FilePostProcessPlanner
             : options.DestinationFolder!.Trim();
 
         // 話者サブフォルダ。話者が判定できなかった場合は作らない（"(不明)" を作らない）。
+        // 登録キャラクター名で始まるプリセット名は、そのキャラクターのフォルダへまとめる。
         var speakerName = string.IsNullOrWhiteSpace(speaker) ? null : speaker!.Trim();
         var targetDir = options.SpeakerSubfolder && speakerName is not null
-            ? Path.Combine(baseDir, SaveNameComposer.Sanitize(speakerName))
+            ? Path.Combine(baseDir, SaveNameComposer.Sanitize(options.SubfolderNameFor(speakerName)))
             : baseDir;
 
         var baseName = ResolveName(originalName, speakerName, options.NameTemplate, now);

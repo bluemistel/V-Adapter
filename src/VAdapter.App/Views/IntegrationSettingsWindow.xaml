@@ -354,7 +354,7 @@
                                     </Border>
 
                                     <TextBlock FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource B.TextMuted}"
-                                               Text="話者名は「投げ込み」タブの話者ルールで判定します。ルールが無い連携環境では、ファイル名を「_」や「-」で区切った 2 番目の要素を話者名として扱います。判別できなかった場合、その部分は区切り文字ごと省かれます。"/>
+                                               Text="話者名は「投げ込み」タブの話者ルールで判定します。ルールが無い連携環境では、先頭の番号・日時を読み飛ばし、数字以外で始まる最初の要素（「_」や「-」で区切られた部分）を話者名として扱います。話者名より前には番号・日時以外を置かず、話者名の後ろは「_」か「-」で区切ってセリフ等を続けてください。判別できなかった場合、その部分は区切り文字ごと省かれます。"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -376,6 +376,28 @@
                                               Checked="OnPpToggled" Unchecked="OnPpToggled"/>
                                     <TextBlock FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"
                                                Text="話者ごとにフォルダを分けて置きます。話者を判定できなかったファイルはサブフォルダを作らずそのまま置きます。"/>
+
+                                    <!-- プリセット単位ではなくキャラクター単位でまとめたい人向け（任意） -->
+                                    <StackPanel Margin="22,8,0,0"
+                                                IsEnabled="{Binding IsChecked, ElementName=PpSpeakerSubCheck}">
+                                        <StackPanel.Style>
+                                            <!-- 振り分けが OFF のときは説明文ごと薄くして、入力できないことを分かりやすくする -->
+                                            <Style TargetType="StackPanel">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Opacity" Value="0.5"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+                                        <TextBlock Text="キャラクターごとにまとめる（任意・1 行に 1 名）" FontSize="12"
+                                                   Foreground="{StaticResource B.TextPrimary}" Margin="0,0,0,3"/>
+                                        <TextBox x:Name="PpSubfolderCharactersBox" AcceptsReturn="True" TextWrapping="NoWrap"
+                                                 MinHeight="60" MaxHeight="120" VerticalScrollBarVisibility="Auto"
+                                                 VerticalContentAlignment="Top"/>
+                                        <TextBlock FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                   Text="話者名（プリセット名）が入力したキャラクター名で始まる場合、そのキャラクター名のフォルダへまとめます（例:「琴葉 葵(通常)」「琴葉 葵(怒り)」→「琴葉 葵」）。一致しない場合や空欄のときは、プリセット名のフォルダに置きます。ファイル名の話者名は変わりません。"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

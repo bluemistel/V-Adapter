@@ -48,6 +48,77 @@ public class FilePostProcessTests
         Assert.Equal(@"C:\out\Voice", plan.TargetDirectory);
     }
 
+    // --- キャラクター単位でまとめる ---
+
+    private static FilePostProcessOptions CharacterOptions(params string[] characters)
+    {
+        var o = Options();
+        o.DestinationFolder = @"D:\voice";
+        o.SpeakerSubfolder = true;
+        o.SubfolderCharacters = characters.ToList();
+        return o;
+    }
+
+    [Theory]
+    [InlineData("琴葉 葵(通常)", @"D:\voice\琴葉 葵")]
+    [InlineData("琴葉 葵(怒り)", @"D:\voice\琴葉 葵")]
+    [InlineData("琴葉 葵", @"D:\voice\琴葉 葵")]
+    [InlineData("琴葉 茜(通常)", @"D:\voice\琴葉 茜")]
+    // 未登録はプリセット単位のまま。
+    [InlineData("紲星あかり(高め)", @"D:\voice\紲星あかり(高め)")]
+    // 前方一致のみ。登録名が後ろに含まれるだけのものはまとめない。
+    [InlineData("【配信用】琴葉 葵", @"D:\voice\【配信用】琴葉 葵")]
+    public void SubfolderCharacters_GroupsPresetsByCharacter(string speaker, string expected)
+    {
+        var plan = FilePostProcessPlanner.Create(Source, speaker, CharacterOptions("琴葉 葵", "琴葉 茜"), Now);
+        Assert.Equal(expected, plan.TargetDirectory);
+    }
+
+    [Fact]
+    public void SubfolderCharacters_PrefersLongestRegisteredName()
+    {
+        var plan = FilePostProcessPlanner.Create(Source, "琴葉 葵(通常)", CharacterOptions("琴葉", "琴葉 葵"), Now);
+        Assert.Equal(@"D:\voice\琴葉 葵", plan.TargetDirectory);
+    }
+
+    [Fact]
+    public void SubfolderCharacters_IgnoresFullWidthSpaceDifference()
+    {
+        // 登録は半角空白、プリセット名は全角空白。フォルダ名は登録した表記に揃う。
+        var plan = FilePostProcessPlanner.Create(Source, "琴葉　葵(通常)", CharacterOptions("琴葉 葵"), Now);
+        Assert.Equal(@"D:\voice\琴葉 葵", plan.TargetDirectory);
+    }
+
+    [Fact]
+    public void SubfolderCharacters_DoNotAffectSpeakerToken()
+    {
+        var o = CharacterOptions("琴葉 葵");
+        o.NameTemplate = "{speaker}_{name}";
+        var plan = FilePostProcessPlanner.Create(Source, "琴葉 葵(通常)", o, Now);
+
+        Assert.Equal(@"D:\voice\琴葉 葵", plan.TargetDirectory);
+        Assert.Equal("琴葉 葵(通常)_4-星界-セリフ", plan.BaseName);
+    }
+
+    [Fact]
+    public void SubfolderCharacters_UnusedWhenSubfolderOff()
+    {
+        var o = CharacterOptions("琴葉 葵");
+        o.SpeakerSubfolder = false;
+        var plan = FilePostProcessPlanner.Create(Source, "琴葉 葵(通常)", o, Now);
+        Assert.Equal(@"D:\voice", plan.TargetDirectory);
+    }
+
+    [Fact]
+    public void SubfolderCharacters_RoundTrip()
+    {
+        var s = new IntegrationSettings();
+        s.PostProcess.SubfolderCharacters.Add("琴葉 葵");
+        var restored = VAdapter.Core.Serialization.VAdapterJson.Deserialize<IntegrationSettings>(
+            VAdapter.Core.Serialization.VAdapterJson.Serialize(s))!;
+        Assert.Equal("琴葉 葵", Assert.Single(restored.PostProcess.SubfolderCharacters));
+    }
+
     // --- 改名 ---
 
     [Fact]
@@ -145,12 +216,27 @@ public class FilePostProcessTests
     // VOICEROID2 は V-Adapter 側が「日時_話者_本文」で保存する。時刻を話者と誤認しないこと。
     [InlineData("20260927_102140_紲星あかり_はーとふる.wav", "紲星あかり")]
     [InlineData("20260830_144653_紲星あかり_テストです.wav", "紲星あかり")]
+    // 各ソフトの書き出し例。番号が 2 つ並ぶ命名で数字を話者と誤認しないこと。
+    [InlineData("001_四国めたん（ノーマル）_tesuto.wav", "四国めたん（ノーマル）")]
+    [InlineData("4_さとうささら_さらさささら.wav", "さとうささら")]
+    [InlineData("138_144541_琴葉 茜_なんで今日で全部決め….wav", "琴葉 茜")]
+    [InlineData("0-星界-sekkaseka-新規プロジェクト.wav", "星界")]
+    [InlineData("001_つくよみちゃん（れいせい）_tukkuyomi.wav", "つくよみちゃん（れいせい）")]
+    [InlineData("009_162738_唯世かのん_委員長のん(慌て)_なんでそこに疑問形を….wav", "唯世かのん")]
+    // 名前に数字を含む・名前が先頭・空白区切りの番号・区切り入りの日時。
+    [InlineData("001_No.7_テスト.wav", "No.7")]
+    [InlineData("四国めたん_テスト.wav", "四国めたん")]
+    [InlineData("001 四国めたん_テスト.wav", "四国めたん")]
+    [InlineData("2026-10-17 16.27.40_四国めたん_テスト.wav", "四国めたん")]
     public void ExtractSpeaker_UsesDefaultPattern(string fileName, string expected) =>
         Assert.Equal(expected, DropRouting.ExtractSpeaker(fileName, pattern: null));
 
     [Theory]
     [InlineData("話者名なし.wav")]
     [InlineData("")]
+    // 話者名の後ろに区切りが無い／数字しか無い命名は判定しない（誤ったフォルダを作らない）。
+    [InlineData("001_四国めたん.wav")]
+    [InlineData("001_002.wav")]
     public void ExtractSpeaker_ReturnsNullWhenUnmatched(string fileName) =>
         Assert.Null(DropRouting.ExtractSpeaker(fileName, pattern: null));
 
@@ -377,5 +463,60 @@ public class FilePostProcessTests
         var folder = Assert.Single(restored.WatchFolders);
         Assert.Equal(@"C:\voice\out", folder.Path);
         Assert.True(folder.IncludeSubdirectories);
+    }
+
+    // --- 旧既定の話者抽出パターンの置き換え ---
+
+    [Fact]
+    public void SpeakerPatternMigration_ReplacesLegacyDefaultOnly()
+    {
+        var settings = new IntegrationSettings();
+        settings.AviUtl.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.LegacyDefaultNamePattern, SpeakerName = "琴葉 茜", Layer = 3 });
+        settings.AviUtl2.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.LegacyDefaultNamePattern });
+        settings.External.Rules.Add(new SpeakerRule { NamePattern = @"^\d+_(.+?)_" }); // 利用者が書き換えたもの
+
+        Assert.True(settings.MigrateSpeakerPatterns());
+
+        Assert.Equal(SpeakerRule.DefaultNamePattern, settings.AviUtl.Rules[0].NamePattern);
+        Assert.Equal("琴葉 茜", settings.AviUtl.Rules[0].SpeakerName);
+        Assert.Equal(3, settings.AviUtl.Rules[0].Layer);
+        Assert.Equal(SpeakerRule.DefaultNamePattern, settings.AviUtl2.Rules[0].NamePattern);
+        Assert.Equal(@"^\d+_(.+?)_", settings.External.Rules[0].NamePattern);
+    }
+
+    [Fact]
+    public void SpeakerPatternMigration_ClearsLegacyPostProcessPattern()
+    {
+        var settings = new IntegrationSettings();
+        settings.PostProcess.SpeakerPattern = SpeakerRule.LegacyDefaultNamePattern;
+
+        Assert.True(settings.MigrateSpeakerPatterns());
+        Assert.Equal(string.Empty, settings.PostProcess.SpeakerPattern);
+    }
+
+    [Fact]
+    public void SpeakerPatternMigration_NothingToDo_ReturnsFalse()
+    {
+        var settings = new IntegrationSettings();
+        settings.AviUtl.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.DefaultNamePattern });
+
+        Assert.False(settings.MigrateSpeakerPatterns());
+    }
+
+    [Fact]
+    public void SpeakerPatternMigration_FixesLayerRoutingForNumberedNames()
+    {
+        // 旧既定のままの「話者名あり」ルールは、番号が 2 つ並ぶ命名で一致せず既定レイヤーへ落ちていた。
+        const string file = "138_144541_琴葉 茜_なんで今日で全部決め….wav";
+        var settings = new IntegrationSettings();
+        settings.AviUtl.DefaultLayer = 1;
+        settings.AviUtl.Rules.Add(new SpeakerRule { NamePattern = SpeakerRule.LegacyDefaultNamePattern, SpeakerName = "琴葉 茜", Layer = 4 });
+        Assert.Equal(1, DropRouting.Resolve(file, settings.AviUtl).Layer);
+
+        settings.MigrateSpeakerPatterns();
+
+        var route = DropRouting.Resolve(file, settings.AviUtl);
+        Assert.Equal(4, route.Layer);
+        Assert.Equal("琴葉 茜", route.Speaker);
     }
 }

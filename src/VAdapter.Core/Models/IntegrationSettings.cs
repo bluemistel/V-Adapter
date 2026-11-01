@@ -107,6 +107,36 @@ public sealed class IntegrationSettings
         }
     }
 
+    /// <summary>
+    /// 話者ルール・後処理に旧既定パターン（<see cref="SpeakerRule.LegacyDefaultNamePattern"/>）が
+    /// そのまま残っていれば、現在の既定パターンへ置き換える。利用者が書き換えたパターンは変更しない。
+    /// 「行を追加」で既定パターンの文字列がルールへ複写されるため、既定を変えても既存ルールには届かない。
+    /// </summary>
+    /// <returns>置き換えを行った場合 true（呼び出し側が保存し直す判断に使う）。</returns>
+    public bool MigrateSpeakerPatterns()
+    {
+        var changed = false;
+        foreach (var config in new[] { AviUtl, AviUtl2, External })
+        {
+            foreach (var rule in config.Rules)
+            {
+                if (rule.NamePattern == SpeakerRule.LegacyDefaultNamePattern)
+                {
+                    rule.NamePattern = SpeakerRule.DefaultNamePattern;
+                    changed = true;
+                }
+            }
+        }
+
+        if (PostProcess.SpeakerPattern == SpeakerRule.LegacyDefaultNamePattern)
+        {
+            PostProcess.SpeakerPattern = string.Empty; // 空＝既定パターン。
+            changed = true;
+        }
+
+        return changed;
+    }
+
     private static bool PathEquals(string a, string b)
     {
         try
@@ -286,16 +316,23 @@ public sealed class WatchFolder
 public sealed class SpeakerRule
 {
     /// <summary>
-    /// 既定の話者抽出パターン。先頭ID + 区切り( _ または - ) + 話者名 + 区切り の形式から
-    /// 話者名（グループ1）を抽出する。
-    /// 例: "04_IA_台詞" → IA / "2-彩澄りりせ-台詞-…" → 彩澄りりせ / "001_東北きりたん（ノーマル）_台詞" → 東北きりたん（ノーマル）。
+    /// 既定の話者抽出パターン。先頭の番号・日時（数字・空白・ピリオドと区切り _ / -）を読み飛ばし、
+    /// 数字以外で始まる最初の要素を、次の区切りまで話者名（グループ1）として抽出する。
+    /// 例: "04_IA_台詞" → IA / "2-彩澄りりせ-台詞-…" → 彩澄りりせ /
+    /// "138_144541_琴葉 茜_台詞" → 琴葉 茜 / "20260927_102140_紲星あかり_本文" → 紲星あかり。
     /// <para>
-    /// 先頭が <c>yyyyMMdd_HHmmss_</c> の場合はそれを日時として読み飛ばす。V-Adapter が
-    /// 名前を組み立てる VOICEROID2 は「日付_時刻_話者_本文」の 4 要素になり、
-    /// 単純に「2 番目の要素」を取ると時刻（例: 102140）を話者名と誤認するため。
+    /// 2 文字目以降の数字は名前の一部とみなす（"No.7" 等）。話者名より前に数字以外の要素
+    /// （セリフ・プロジェクト名等）がある命名や、話者名の後ろに区切りが無い命名には対応しない。
     /// </para>
     /// </summary>
-    public const string DefaultNamePattern = @"^(?:\d{8}_\d{6}_|[^_\-]*[_\-])(.+?)[_\-]";
+    public const string DefaultNamePattern = @"^[\d\s._\-]*([^\d\s._\-][^_\-]*)[_\-]";
+
+    /// <summary>
+    /// v0.0.9 までの既定パターン（常に 2 番目の要素を取る）。番号が 2 つ並ぶ命名
+    /// （A.I.VOICE2 の "009_162738_話者_…" 等）で数字を話者名と誤認したため置き換えた。
+    /// 保存済みの話者ルールに残るこの文字列は <see cref="IntegrationSettings.MigrateSpeakerPatterns"/> が更新する。
+    /// </summary>
+    public const string LegacyDefaultNamePattern = @"^(?:\d{8}_\d{6}_|[^_\-]*[_\-])(.+?)[_\-]";
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
@@ -347,6 +384,32 @@ public sealed class FilePostProcessOptions
 
     /// <summary>話者名のサブフォルダへ振り分けるか（話者が判定できた場合のみ）。</summary>
     public bool SpeakerSubfolder { get; set; }
+
+    /// <summary>
+    /// 話者サブフォルダをキャラクター単位にまとめるためのキャラクター名（任意）。
+    /// ファイル名から取り出した話者名はユーザープリセット名（例: <c>琴葉 葵(通常)</c>）になり得るため、
+    /// 登録名で始まる話者名はその登録名のフォルダへまとめる。空なら従来どおりプリセット単位。
+    /// サブフォルダ名にだけ使い、<c>{speaker}</c> の改名には影響させない。
+    /// </summary>
+    public List<string> SubfolderCharacters { get; set; } = new();
+
+    /// <summary>
+    /// 話者名からサブフォルダ名を決める。<see cref="SubfolderCharacters"/> のうち話者名が前方一致する
+    /// 最長の登録名を返し、一致が無ければ話者名をそのまま返す。
+    /// 全角・半角の空白の違いと大文字・小文字の違いは無視する。
+    /// </summary>
+    public string SubfolderNameFor(string speaker)
+    {
+        var target = NormalizeSpaces(speaker.Trim());
+        var matched = SubfolderCharacters
+            .Select(c => c?.Trim() ?? string.Empty)
+            .Where(c => c.Length > 0 && target.StartsWith(NormalizeSpaces(c), StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(c => c.Length) // 「琴葉」と「琴葉 葵」が両方あれば長い方。
+            .FirstOrDefault();
+        return matched ?? speaker.Trim();
+
+        static string NormalizeSpaces(string s) => s.Replace('　', ' ');
+    }
 
     /// <summary>
     /// ファイル名から話者名を抽出する正規表現（グループ1が話者名）。空なら

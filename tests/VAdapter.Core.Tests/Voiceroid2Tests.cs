@@ -144,6 +144,38 @@ public class Voiceroid2Tests
         Assert.IsType<WriteSubtitleInstruction>(restored[2]);
     }
 
+    [Fact]
+    public void BuiltInSaveMacro_ReadsCharacterFromCharacterView()
+    {
+        // 座標だけで読むとウィンドウ幅や立ち絵の表示で外れ、選択中のタブ名「標準」を拾った。
+        // 名前表示の入れ物（CharacterView）をセレクタで指定し、座標は予備として残す。
+        // ビルド出力の場所に依らないよう、このソースファイルの位置から辿る。
+        var dir = new DirectoryInfo(Path.GetDirectoryName(ThisFilePath())!);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "V-Adapter.sln")))
+            dir = dir.Parent;
+        Assert.NotNull(dir);
+        var path = Path.Combine(dir!.FullName, "src", "VAdapter.App", "script", "built-in", "音声の保存.vamacro");
+        var bundle = VAdapterJson.Deserialize<MacroBundle>(File.ReadAllText(path))!;
+
+        var voiceroid = bundle.Targets.Single(t => t.ProcessName == "VoiceroidEditor");
+        var script = bundle.Macros.SelectMany(m => m.Scripts).Single(s => s.TargetApplicationId == voiceroid.Id);
+        var read = script.Instructions.OfType<ReadUiTextInstruction>().Single(r => r.VariableName == "character");
+
+        Assert.Equal("d", read.Selector.AutomationId);
+        Assert.Equal("CharacterView", read.Selector.ClassName);
+        Assert.True(read.PointCaptured);
+    }
+
+    private static string ThisFilePath([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
+
+    [Fact]
+    public void Selector_ClassNameAlone_CountsAsCondition()
+    {
+        var s = new UiElementSelector { ClassName = "CharacterView" };
+        Assert.True(s.HasAnyCondition);
+        Assert.Contains("class=CharacterView", s.Describe());
+    }
+
     // --- ユーザープリセット名（キャラクター名＋任意の文字列）の照合 ---
 
     [Theory]

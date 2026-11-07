@@ -20,6 +20,9 @@ public partial class MainWindow : Window
     private string? _activeTargetId;
     private bool _suppressToggleEvents;
 
+    /// <summary>送信先が手動モードか（自動/手動の切替表示と同じ値）。</summary>
+    private bool _manualSendMode;
+
     public MainWindow(AppState state)
     {
         InitializeComponent();
@@ -27,7 +30,13 @@ public partial class MainWindow : Window
         _state = state;
         MacroList.ItemsSource = _rows;
         ReloadRows();
+
+        // 前回終了時の送信先（自動/手動と固定先）を復元する。
+        var prefs = _state.Preferences;
+        _manualSendMode = prefs.ManualSendTarget;
+        _activeTargetId = prefs.ManualSendTarget ? prefs.SendTargetId : null;
         ReloadTargetSwitcher();
+        ApplySendMode(auto: !prefs.ManualSendTarget);
 
         // 展開トグルのシェブロン回転。
         OpsToggle.Checked += (_, _) => OpsChevron.Angle = 180;
@@ -186,9 +195,13 @@ public partial class MainWindow : Window
         _suppressToggleEvents = true;
         TargetSwitcher.Children.Clear();
 
-        // 選択中の対象アプリが削除されていたら解除。
-        if (_activeTargetId is not null && _state.Library.FindTarget(_activeTargetId) is null)
+        // 選択中の対象アプリが削除された・一覧から隠された場合は解除（画面に出ない固定先を残さない）。
+        if (_activeTargetId is not null
+            && _state.Library.FindTarget(_activeTargetId) is not { HideFromSendTargets: false })
+        {
             _activeTargetId = null;
+            SaveSendTarget();
+        }
 
         var pillStyle = (Style)FindResource("TargetPillToggle");
         var visibleTargets = _state.Library.Targets.Where(t => !t.HideFromSendTargets).ToList();
@@ -239,6 +252,7 @@ public partial class MainWindow : Window
                     other.IsChecked = false;
             }
             _suppressToggleEvents = false;
+            SaveSendTarget();
 
             var name = _state.Library.FindTarget(_activeTargetId)?.Name ?? "(不明)";
             Log($"送信先を「{name}」に固定しました。");
@@ -278,14 +292,34 @@ public partial class MainWindow : Window
 
     private void OnSendModeManual(object sender, RoutedEventArgs e) => ApplySendMode(auto: false);
 
-    /// <summary>自動／手動の見た目と一覧の表示を切り替える。</summary>
+    /// <summary>自動／手動の見た目と一覧の表示を切り替え、次回起動時のために保存する。</summary>
     private void ApplySendMode(bool auto)
     {
+        _manualSendMode = !auto;
+        SaveSendTarget();
+
         AutoModeToggle.IsChecked = auto;
         ManualModeToggle.IsChecked = !auto;
         AutoModeHint.Visibility = auto ? Visibility.Visible : Visibility.Collapsed;
         ManualModeHint.Visibility = auto ? Visibility.Collapsed : Visibility.Visible;
         ManualPane.Visibility = auto ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    /// <summary>
+    /// 送信先の自動/手動と固定先を保存する（変化が無ければ書き込まない）。
+    /// 自動のときは固定先を持たないので null で保存する。
+    /// </summary>
+    private void SaveSendTarget()
+    {
+        var prefs = _state.Preferences;
+        var targetId = _manualSendMode ? _activeTargetId : null;
+        if (prefs.ManualSendTarget == _manualSendMode && prefs.SendTargetId == targetId)
+            return;
+
+        prefs.ManualSendTarget = _manualSendMode;
+        prefs.SendTargetId = targetId;
+        if (!_state.SavePreferences())
+            Log("注意: 送信先の設定を保存できませんでした（次回起動時は前の状態に戻ります）。");
     }
 
     private MacroRow? SelectedRow => MacroList.SelectedItem as MacroRow;

@@ -66,6 +66,13 @@ public sealed class IntegrationSettings
     public FilePostProcessOptions PostProcess { get; set; } = new();
 
     /// <summary>
+    /// 同じ対象アプリ向けのスクリプトが複数あるマクロで、どれを使うか（キーは
+    /// <see cref="ScriptVariants.Key"/>、値はスクリプト ID）。未選択はマクロ内の先頭を使う。
+    /// 組込マクロは更新で上書きされるため、選択はマクロ側ではなくここに持つ。
+    /// </summary>
+    public Dictionary<string, string> ScriptChoices { get; set; } = new();
+
+    /// <summary>
     /// 旧形式（連携環境ごと／後処理専用に分かれていた監視フォルダ）を <see cref="WatchFolders"/> へ引き継ぐ。
     /// 設定の読み込み直後に一度だけ呼ぶ。既に <see cref="WatchFolders"/> があれば何もしない。
     /// </summary>

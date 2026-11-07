@@ -40,7 +40,7 @@ public sealed class MacroRunner
         string? preferredTargetId = null,
         IntegrationSettings? integration = null)
     {
-        var selection = SelectScript(macro, library, preferredTargetId);
+        var selection = SelectScript(macro, library, preferredTargetId, integration);
         if (selection is null)
         {
             log?.Report($"マクロ「{macro.Name}」: 実行可能なスクリプトがありません。");
@@ -48,7 +48,11 @@ public sealed class MacroRunner
         }
 
         var (script, target) = selection.Value;
-        log?.Report($"マクロ「{macro.Name}」を開始（対象: {target?.Name ?? "共通"}）");
+        // 方式が複数あるときは、どれで動いたかをログで分かるようにする。
+        var variant = ScriptVariants.For(macro, script.TargetApplicationId).Count > 1
+            ? $" / {ScriptVariants.DisplayName(macro, script)}"
+            : "";
+        log?.Report($"マクロ「{macro.Name}」を開始（対象: {target?.Name ?? "共通"}{variant}）");
 
         // 送信先トグルで選ばれた対象アプリ（共通スクリプトのランチャー等で exe 解決に使う）。
         var preferredTarget = preferredTargetId is null ? null : library.FindTarget(preferredTargetId);
@@ -95,9 +99,10 @@ public sealed class MacroRunner
     /// 実行するスクリプトを選択する。優先順位:
     /// 1) 対象アプリが前面のスクリプト, 2) 対象アプリが起動中のスクリプト,
     /// 3) 共通(対象なし)スクリプト, 4) 対象指定はあるが未起動の先頭。
+    /// 同じ対象アプリ向けのスクリプトが複数ある場合は、設定で選んだ方式（未選択は先頭）を使う。
     /// </summary>
     private (MacroScript Script, TargetApplication? Target)? SelectScript(
-        Macro macro, MacroLibrary library, string? preferredTargetId)
+        Macro macro, MacroLibrary library, string? preferredTargetId, IntegrationSettings? integration)
     {
         if (macro.Scripts.Count == 0)
             return null;
@@ -105,15 +110,18 @@ public sealed class MacroRunner
         // 0) 送信先トグルで明示指定された対象アプリのスクリプトを最優先。
         if (preferredTargetId is not null)
         {
-            var preferred = macro.Scripts.FirstOrDefault(s => s.TargetApplicationId == preferredTargetId);
+            var preferred = ScriptVariants.Resolve(macro, preferredTargetId, integration);
             var preferredTarget = library.FindTarget(preferredTargetId);
             if (preferred is not null && preferredTarget is not null)
                 return (preferred, preferredTarget);
         }
 
+        // 対象アプリごとに 1 つ（選択中の方式）へ絞ってから判定する。
         var withTarget = macro.Scripts
             .Where(s => s.TargetApplicationId is not null)
-            .Select(s => (Script: s, Target: library.FindTarget(s.TargetApplicationId)))
+            .Select(s => s.TargetApplicationId!)
+            .Distinct()
+            .Select(id => (Script: ScriptVariants.Resolve(macro, id, integration)!, Target: library.FindTarget(id)))
             .Where(x => x.Target is not null)
             .ToList();
 
@@ -132,7 +140,7 @@ public sealed class MacroRunner
         }
 
         // 3) 共通（フォールバック）
-        var fallback = macro.Scripts.FirstOrDefault(s => s.TargetApplicationId is null);
+        var fallback = ScriptVariants.Resolve(macro, null, integration);
         if (fallback is not null)
             return (fallback, null);
 

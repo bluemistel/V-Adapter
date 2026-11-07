@@ -54,6 +54,14 @@
                         <Button Content="↑" Width="40" Margin="0,0,6,0" Click="OnMoveScriptUp" ToolTip="上へ"/>
                         <Button Content="↓" Width="40" Click="OnMoveScriptDown" ToolTip="下へ"/>
                     </StackPanel>
+                    <!-- 同じ対象アプリに複数のスクリプトを持たせるときの名前（設定画面で選ぶときの表示） -->
+                    <StackPanel x:Name="VariantPanel" DockPanel.Dock="Bottom" Margin="0,8,0,0" IsEnabled="False">
+                        <TextBlock Text="方式の名前（任意）" FontSize="12" Margin="0,0,0,3"/>
+                        <TextBox x:Name="VariantNameBox" TextChanged="OnVariantNameChanged"/>
+                        <TextBlock FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0"
+                                   Foreground="{StaticResource B.TextMuted}"
+                                   Text="同じ対象アプリのスクリプトが複数あるときは、設定 →「合成音声ソフト」でどれを使うか選べます。未選択のときは上にあるものを使います。"/>
+                    </StackPanel>
                     <ListBox x:Name="ScriptList" DisplayMemberPath="Display"
                              SelectionChanged="OnScriptSelectionChanged"/>
                 </DockPanel>

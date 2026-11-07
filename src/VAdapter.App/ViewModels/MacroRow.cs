@@ -36,6 +36,7 @@ public sealed partial class MacroRow : ObservableObject
                 .Select(s => s.TargetApplicationId is null
                     ? "共通"
                     : _library.FindTarget(s.TargetApplicationId)?.Name ?? "(不明)")
+                .Distinct() // 方式違いのスクリプトで同じ名前を重ねない。
                 .ToList();
             return string.Join(", ", names);
         }

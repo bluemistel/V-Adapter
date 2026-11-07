@@ -22,7 +22,8 @@ public sealed partial class ScriptRow : ObservableObject
             var name = Model.TargetApplicationId is null
                 ? "共通（対象アプリなし）"
                 : _library.FindTarget(Model.TargetApplicationId)?.Name ?? "(不明な対象アプリ)";
-            return $"{name}  —  {Model.Instructions.Count} 命令";
+            var variant = string.IsNullOrWhiteSpace(Model.VariantName) ? "" : $"（{Model.VariantName.Trim()}）";
+            return $"{name}{variant}  —  {Model.Instructions.Count} 命令";
         }
     }
 

@@ -81,7 +81,7 @@ $readme = Get-Content (Join-Path $PSScriptRoot 'release-readme.txt') -Raw -Encod
 $readme = $readme.Replace('{VERSION}', $Version)
 Set-Content -Path (Join-Path $Stage 'README.txt') -Value $readme -Encoding UTF8 -NoNewline
 
-# library.json / integration.json は初回起動時に自動生成されるため同梱しない。
+# library.json / integration.json / preferences.json は初回起動時に自動生成されるため同梱しない。
 
 # --- zip（日本語ファイル名を UTF-8 で格納するため .NET API を使う） ---
 if (-not $SkipZip) {

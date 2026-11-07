@@ -170,6 +170,17 @@
                         </Border>
 
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.10 (β)</Run><LineBreak/>
+                            <Run FontWeight="SemiBold">［機能追加］</Run><LineBreak/>
+                            ・マクロに「方式」を追加。同じショートカットのまま、設定 →「合成音声ソフト」→「マクロの方式」で動きを切り替えられます<LineBreak/>
+                            ・VOICEPEAK の「音声の再生」に「ブロックを再生（Ctrl+B）」を追加。ブロックの先頭から再生し、そのブロックの終わりで止まります<LineBreak/>
+                            ・メイン画面の送信先（自動 / 手動）と、手動で選んだアプリを次回起動時も引き継ぐように<LineBreak/>
+                            ・「話者名のサブフォルダへ振り分ける」に、キャラクターごとにまとめるオプションを追加（例:「琴葉 葵(通常)」「琴葉 葵(怒り)」→「琴葉 葵」フォルダ）<LineBreak/>
+                            <Run FontWeight="SemiBold">［修正］</Run><LineBreak/>
+                            ・VOICEROID2 の音声の保存で、キャラクター名に「標準」を読み取って止まる問題を修正（立ち絵を非表示にしていても読めるように）<LineBreak/>
+                            ・「009_162738_話者_…」のように番号が 2 つ並ぶファイル名で、数字を話者名と誤認する問題を修正。既定のままの話者ルールは自動で更新されます<LineBreak/>
+                            <Run FontWeight="SemiBold">［注意］</Run><LineBreak/>
+                            ・話者名は「先頭の番号・日時の次の要素」として扱います。命名規則を変えられるソフトでは、話者名より前にセリフ等を置かず、話者名の後ろは「_」か「-」で区切ってください<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.9 (β)</Run><LineBreak/>
                             ・同じ名前のファイルを続けて書き出したとき、2回目以降が取り込まれない問題を修正。合成音声ソフト側が毎回同じ名前で保存する構成でも、保存のたびに後処理・投げ込みが動くようになりました<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.8 (β)</Run><LineBreak/>

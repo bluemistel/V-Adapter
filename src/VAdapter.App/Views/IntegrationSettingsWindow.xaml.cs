@@ -56,6 +56,8 @@ public partial class IntegrationSettingsWindow : Window
         V2Grid.ItemsSource = _v2chars;
         UpdateFolderIndexHint();
 
+        LoadScriptChoices();
+
         _state.DropService.Log += OnServiceLog;
         Closed += (_, _) => _state.DropService.Log -= OnServiceLog;
 
@@ -288,6 +290,7 @@ public partial class IntegrationSettingsWindow : Window
     {
         FlushEditor();
         CommitPostProcess();
+        CommitScriptChoices();
         _state.UpdateIntegration(_working);
         DialogResult = true;
     }
@@ -568,6 +571,84 @@ public partial class IntegrationSettingsWindow : Window
 
     private static IntegrationSettings DeepClone(IntegrationSettings s) =>
         VAdapterJson.Deserialize<IntegrationSettings>(VAdapterJson.Serialize(s))!;
+
+    // --- マクロの方式 ---
+
+    /// <summary>方式の選択欄（キーは <see cref="ScriptVariants.Key"/>）。</summary>
+    private readonly Dictionary<string, System.Windows.Controls.ComboBox> _scriptChoiceCombos = new();
+
+    /// <summary>
+    /// 同じ対象アプリ向けのスクリプトが複数あるマクロだけ、選択欄を並べる。
+    /// 一覧はマクロの内容から作るので、方式を足したマクロは自動で現れる。
+    /// </summary>
+    private void LoadScriptChoices()
+    {
+        ScriptChoicePanel.Children.Clear();
+        _scriptChoiceCombos.Clear();
+
+        var entries = _state.Library.Macros
+            .SelectMany(m => m.Scripts
+                .Select(s => s.TargetApplicationId)
+                .Distinct()
+                .Where(id => ScriptVariants.For(m, id).Count > 1)
+                .Select(id => (Macro: m, TargetId: id,
+                    TargetName: id is null ? "共通" : _state.Library.FindTarget(id)?.Name ?? "(不明)")))
+            .OrderBy(e => e.TargetName, StringComparer.CurrentCulture)
+            .ThenBy(e => e.Macro.Name, StringComparer.CurrentCulture)
+            .ToList();
+
+        if (entries.Count == 0)
+        {
+            ScriptChoicePanel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = "切り替えられる方式を持つマクロはありません。",
+                FontSize = 12,
+                Foreground = (System.Windows.Media.Brush)FindResource("B.TextMuted"),
+            });
+            return;
+        }
+
+        foreach (var (macro, targetId, targetName) in entries)
+        {
+            var current = ScriptVariants.Resolve(macro, targetId, _working);
+            var combo = new System.Windows.Controls.ComboBox { MinWidth = 260 };
+            foreach (var script in ScriptVariants.For(macro, targetId))
+            {
+                var item = new System.Windows.Controls.ComboBoxItem
+                {
+                    Content = ScriptVariants.DisplayName(macro, script),
+                    Tag = script.Id,
+                };
+                combo.Items.Add(item);
+                if (ReferenceEquals(script, current))
+                    combo.SelectedItem = item;
+            }
+
+            var row = new System.Windows.Controls.DockPanel { Margin = new Thickness(0, 0, 0, 6) };
+            System.Windows.Controls.DockPanel.SetDock(combo, System.Windows.Controls.Dock.Right);
+            row.Children.Add(combo);
+            row.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = $"{targetName} ／ {macro.Name}",
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0),
+                Foreground = (System.Windows.Media.Brush)FindResource("B.TextPrimary"),
+            });
+            ScriptChoicePanel.Children.Add(row);
+
+            _scriptChoiceCombos[ScriptVariants.Key(macro.Id, targetId)] = combo;
+        }
+    }
+
+    private void CommitScriptChoices()
+    {
+        foreach (var (key, combo) in _scriptChoiceCombos)
+        {
+            if (combo.SelectedItem is System.Windows.Controls.ComboBoxItem { Tag: string scriptId })
+                _working.ScriptChoices[key] = scriptId;
+        }
+    }
 
     /// <summary>対象アプリ管理を開く。保存された場合はライブラリを永続化し、呼び出し元へ変更を伝える。</summary>
     private void OnOpenTargetManager(object sender, RoutedEventArgs e)

@@ -417,6 +417,18 @@
                                        Text="特定の合成音声ソフトだけに必要な設定をまとめています。該当のソフトを使っていない場合は、何も設定する必要はありません。"/>
                         </Border>
 
+                        <!-- マクロの方式の切り替え（同じ合成音声ソフト向けのスクリプトが複数あるマクロだけ表示） -->
+                        <Border Background="{StaticResource B.Surface}" CornerRadius="8" BorderBrush="{StaticResource B.Border}"
+                                BorderThickness="1" Padding="14,12" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="マクロの方式" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource B.TextPrimary}"/>
+                                <TextBlock FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap" Margin="0,3,0,8"
+                                           Text="同じ合成音声ソフトに複数の方式があるマクロで、どれを使うかを選びます（例: VOICEPEAK の再生を「カーソル位置から」か「ブロック単位」か）。ショートカットは同じまま切り替わります。"/>
+                                <StackPanel x:Name="ScriptChoicePanel"/>
+                            </StackPanel>
+                        </Border>
+
                         <Border Background="{StaticResource B.Surface}" CornerRadius="8" BorderBrush="{StaticResource B.Border}"
                                 BorderThickness="1" Padding="14,12">
                             <StackPanel>

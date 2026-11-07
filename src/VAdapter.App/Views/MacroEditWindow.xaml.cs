@@ -78,6 +78,11 @@ public partial class MacroEditWindow : Window
         var script = CurrentScript;
         InstructionArea.IsEnabled = script is not null;
 
+        _loadingVariantName = true;
+        VariantPanel.IsEnabled = script is not null;
+        VariantNameBox.Text = script?.VariantName ?? string.Empty;
+        _loadingVariantName = false;
+
         if (script is null)
         {
             InstructionList.ItemsSource = null;
@@ -89,21 +94,37 @@ public partial class MacroEditWindow : Window
         InstructionList.ItemsSource = _currentInstructions;
     }
 
+    private bool _loadingVariantName;
+
+    private void OnVariantNameChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_loadingVariantName || CurrentScript is not { } script)
+            return;
+        script.VariantName = string.IsNullOrWhiteSpace(VariantNameBox.Text) ? null : VariantNameBox.Text.Trim();
+        SelectedScriptRow?.Refresh();
+    }
+
     private void OnAddScriptClick(object sender, RoutedEventArgs e)
     {
         var menu = new ContextMenu { PlacementTarget = (UIElement)sender, Placement = PlacementMode.Bottom };
 
-        // 既に使われている対象（共通含む）は除外。
+        // 未使用の対象を先に並べ、使用済みの対象は「別の方式」として後ろにまとめる。
         var usedIds = _scriptRows.Select(r => r.Model.TargetApplicationId).ToHashSet();
+        var targets = _library.Targets.OrderBy(t => t.Name, StringComparer.CurrentCulture).ToList();
 
         if (!usedIds.Contains(null))
             menu.Items.Add(BuildScriptMenuItem("共通（対象アプリなし）", null));
 
-        foreach (var target in _library.Targets.OrderBy(t => t.Name, StringComparer.CurrentCulture))
-        {
-            if (usedIds.Contains(target.Id))
-                continue;
+        foreach (var target in targets.Where(t => !usedIds.Contains(t.Id)))
             menu.Items.Add(BuildScriptMenuItem(target.Name, target.Id));
+
+        var used = targets.Where(t => usedIds.Contains(t.Id)).ToList();
+        if (used.Count > 0)
+        {
+            if (menu.Items.Count > 0)
+                menu.Items.Add(new Separator());
+            foreach (var target in used)
+                menu.Items.Add(BuildScriptMenuItem($"{target.Name}（別の方式を追加）", target.Id));
         }
 
         if (menu.Items.Count == 0)

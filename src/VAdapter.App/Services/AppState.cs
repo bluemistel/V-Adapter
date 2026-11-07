@@ -49,6 +49,31 @@ public sealed class AppState : IDisposable
             }
         }
         Integration = _integrationStore.Load();
+
+        // メイン画面の操作状態（送信先の自動/手動など）。これも exe 同階層。
+        _preferencesStore = new UiPreferencesStore(Path.Combine(rootDir, "preferences.json"));
+        Preferences = _preferencesStore.Load();
+    }
+
+    private readonly UiPreferencesStore _preferencesStore;
+
+    /// <summary>アプリを終了しても引き継ぐメイン画面の操作状態。</summary>
+    public UiPreferences Preferences { get; }
+
+    /// <summary>
+    /// <see cref="Preferences"/> を保存する。失敗しても操作は続けられるため例外は投げず、結果だけ返す。
+    /// </summary>
+    public bool SavePreferences()
+    {
+        try
+        {
+            _preferencesStore.Save(Preferences);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     /// <summary>

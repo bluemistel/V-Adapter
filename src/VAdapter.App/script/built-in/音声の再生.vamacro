@@ -120,6 +120,7 @@
         {
           "id": "1178f44c074641508f1550955bac2b32",
           "targetApplicationId": "88583c921c7448d4a073ac358862f5df",
+          "variantName": "\u30AB\u30FC\u30BD\u30EB\u4F4D\u7F6E\u304B\u3089\u518D\u751F\uFF08Space\uFF09",
           "instructions": [
             {
               "kind": "waitactivation",
@@ -148,6 +149,32 @@
                 "keyName": "Space"
               },
               "id": "2e434af3ba914c238f01e7b043303c76"
+            }
+          ]
+        },
+        {
+          "id": "c5a1d7e3f9b2486a8e0d4b6f1a3c5e70",
+          "targetApplicationId": "88583c921c7448d4a073ac358862f5df",
+          "variantName": "\u30D6\u30ED\u30C3\u30AF\u3092\u518D\u751F\uFF08Ctrl+B\uFF09",
+          "instructions": [
+            {
+              "kind": "waitactivation",
+              "timeoutMs": 5000,
+              "id": "c5a1d7e3f9b2486a8e0d4b6f1a3c5e71"
+            },
+            {
+              "kind": "wait",
+              "durationMs": 750,
+              "id": "c5a1d7e3f9b2486a8e0d4b6f1a3c5e72"
+            },
+            {
+              "kind": "sendkeys",
+              "keyCombination": {
+                "modifiers": "Control",
+                "virtualKey": 66,
+                "keyName": "B"
+              },
+              "id": "c5a1d7e3f9b2486a8e0d4b6f1a3c5e73"
             }
           ]
         },

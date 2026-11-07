@@ -15,6 +15,12 @@ public sealed class MacroScript
     /// </summary>
     public string? TargetApplicationId { get; set; }
 
+    /// <summary>
+    /// 方式の名前（任意。例: "ブロックを再生（Ctrl+B）"）。
+    /// 同じ対象アプリ向けのスクリプトを複数持つとき、設定画面でどれを使うか選ぶための表示名。
+    /// </summary>
+    public string? VariantName { get; set; }
+
     /// <summary>実行する命令列（順序保持）。</summary>
     public List<Instruction> Instructions { get; set; } = new();
 }

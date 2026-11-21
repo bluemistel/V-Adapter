@@ -28,6 +28,27 @@ public sealed class KeyCombination
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsValid => VirtualKey != 0;
 
+    /// <summary>
+    /// この組み合わせを押すときに使う物理キーの仮想キーコード（修飾キー → 主キーの順）。
+    /// ショートカットで起動したマクロを、キーが離されてから始めるための判定に使う。
+    /// Ctrl/Alt/Shift は左右を区別しないコード、Win は左右両方を返す。
+    /// </summary>
+    public IReadOnlyList<int> PhysicalVirtualKeys()
+    {
+        var keys = new List<int>(6);
+        if (Modifiers.HasFlag(KeyModifiers.Control)) keys.Add(0x11); // VK_CONTROL
+        if (Modifiers.HasFlag(KeyModifiers.Alt)) keys.Add(0x12);     // VK_MENU
+        if (Modifiers.HasFlag(KeyModifiers.Shift)) keys.Add(0x10);   // VK_SHIFT
+        if (Modifiers.HasFlag(KeyModifiers.Win))
+        {
+            keys.Add(0x5B); // VK_LWIN
+            keys.Add(0x5C); // VK_RWIN
+        }
+        if (VirtualKey != 0)
+            keys.Add(VirtualKey);
+        return keys;
+    }
+
     /// <summary>"Ctrl+Shift+E" のような表示文字列を生成する。</summary>
     public override string ToString()
     {

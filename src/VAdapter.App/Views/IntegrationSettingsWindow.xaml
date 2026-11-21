@@ -372,6 +372,16 @@
                                         <Button DockPanel.Dock="Right" Content="参照…" Width="70" Margin="8,0,0,0" Click="OnPpBrowseDest"/>
                                         <TextBox x:Name="PpDestBox" VerticalContentAlignment="Center" TextChanged="OnPpDestChanged"/>
                                     </DockPanel>
+
+                                    <!-- 合成音声ソフトが音声と一緒に出力する付随ファイル -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                        <TextBlock Text="一緒に移動・改名するファイル:" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                   Foreground="{StaticResource B.TextPrimary}"/>
+                                        <CheckBox x:Name="PpMoveLabCheck" Content="LAB（.lab）" Margin="0,0,14,0"/>
+                                        <CheckBox x:Name="PpMoveSrtCheck" Content="SRT（.srt）"/>
+                                    </StackPanel>
+                                    <TextBlock FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                               Text="音声と同じ名前のファイルを、音声・字幕と同じ場所・名前にそろえます。音声より後に出力された場合も、5 秒以内なら追いかけて移動します。出力していない種類はチェックしなくてかまいません（チェックしても問題はありません）。"/>
                                     <CheckBox x:Name="PpSpeakerSubCheck" Content="話者名のサブフォルダへ振り分ける" Margin="0,0,0,3"
                                               Checked="OnPpToggled" Unchecked="OnPpToggled"/>
                                     <TextBlock FontSize="11" Foreground="{StaticResource B.TextMuted}" TextWrapping="Wrap"

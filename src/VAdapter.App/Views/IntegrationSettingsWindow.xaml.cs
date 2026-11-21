@@ -317,6 +317,8 @@ public partial class IntegrationSettingsWindow : Window
         PpTemplateBox.Text = pp.NameTemplate;
         PpDestBox.Text = pp.DestinationFolder ?? string.Empty;
         PpSpeakerSubCheck.IsChecked = pp.SpeakerSubfolder;
+        PpMoveLabCheck.IsChecked = pp.MoveLab;
+        PpMoveSrtCheck.IsChecked = pp.MoveSrt;
         PpSubfolderCharactersBox.Text = string.Join(Environment.NewLine, pp.SubfolderCharacters);
         PpPresetCombo.SelectedIndex = PresetFor(pp.NameTemplate);
 
@@ -351,6 +353,8 @@ public partial class IntegrationSettingsWindow : Window
         pp.NameTemplate = CurrentTemplate();
         pp.DestinationFolder = string.IsNullOrWhiteSpace(PpDestBox.Text) ? null : PpDestBox.Text.Trim();
         pp.SpeakerSubfolder = PpSpeakerSubCheck.IsChecked == true;
+        pp.MoveLab = PpMoveLabCheck.IsChecked == true;
+        pp.MoveSrt = PpMoveSrtCheck.IsChecked == true;
         // 振り分けを OFF にしても入力内容は残す（再び ON にしたとき入れ直さなくて済むように）。
         pp.SubfolderCharacters = PpSubfolderCharactersBox.Text
             .Split('\n')

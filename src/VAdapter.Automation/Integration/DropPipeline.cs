@@ -19,6 +19,9 @@ public sealed class DropPipeline : IDisposable
     private readonly WavTxtWatcher _watcher = new();
     private readonly object _gate = new();
 
+    /// <summary>終了時に、付随ファイルの追いかけ移動を止める。</summary>
+    private readonly CancellationTokenSource _disposing = new();
+
     private IntegrationMode _mode = IntegrationMode.MacroOnly;
     private AviutlDropConfig? _config;
     private IImportAdapter? _adapter;
@@ -149,6 +152,13 @@ public sealed class DropPipeline : IDisposable
         foreach (var produced in processed.ProducedAudioPaths)
             _watcher.Ignore(produced);
 
+        // 音声より後に出力される .lab / .srt は、現れたら同じ移動先へ追いかけて移動する。
+        if (processed.PendingCompanions is { } pending)
+        {
+            _ = FilePostProcessor.FollowCompanionsAsync(
+                pending, FilePostProcessor.CompanionFollowWindow, m => Log?.Invoke(m), _disposing.Token);
+        }
+
         if (adapter is null || config is null || route is not { } resolved)
             return;
 
@@ -175,6 +185,7 @@ public sealed class DropPipeline : IDisposable
 
     public void Dispose()
     {
+        _disposing.Cancel();
         _watcher.Dispose();
     }
 }

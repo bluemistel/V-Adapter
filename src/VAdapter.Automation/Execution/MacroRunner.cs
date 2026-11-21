@@ -38,7 +38,8 @@ public sealed class MacroRunner
         IProgress<string>? log = null,
         CancellationToken ct = default,
         string? preferredTargetId = null,
-        IntegrationSettings? integration = null)
+        IntegrationSettings? integration = null,
+        KeyCombination? triggeredBy = null)
     {
         var selection = SelectScript(macro, library, preferredTargetId, integration);
         if (selection is null)
@@ -53,6 +54,15 @@ public sealed class MacroRunner
             ? $" / {ScriptVariants.DisplayName(macro, script)}"
             : "";
         log?.Report($"マクロ「{macro.Name}」を開始（対象: {target?.Name ?? "共通"}{variant}）");
+
+        // ショートカットで起動した場合は、そのキーが離されてから始める
+        // （押したままの Ctrl 等が送信キーやクリックに重ならないように）。
+        if (triggeredBy is { IsValid: true }
+            && !await KeyReleaseWaiter.WaitAsync(triggeredBy, KeyReleaseWaiter.DefaultTimeout, ct))
+        {
+            log?.Report($"    注意: ショートカット（{triggeredBy}）が押されたままのため、そのまま続けます。"
+                        + "キーを押したままだと、送信するキーやクリックに Ctrl などが加わることがあります。");
+        }
 
         // 送信先トグルで選ばれた対象アプリ（共通スクリプトのランチャー等で exe 解決に使う）。
         var preferredTarget = preferredTargetId is null ? null : library.FindTarget(preferredTargetId);

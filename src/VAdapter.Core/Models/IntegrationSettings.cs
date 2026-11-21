@@ -392,6 +392,25 @@ public sealed class FilePostProcessOptions
     /// <summary>話者名のサブフォルダへ振り分けるか（話者が判定できた場合のみ）。</summary>
     public bool SpeakerSubfolder { get; set; }
 
+    /// <summary>同じ名前の .lab（音素ラベル）も音声・字幕と一緒に移動・改名するか（既定 OFF）。</summary>
+    public bool MoveLab { get; set; }
+
+    /// <summary>同じ名前の .srt（字幕）も音声・字幕と一緒に移動・改名するか（既定 OFF）。</summary>
+    public bool MoveSrt { get; set; }
+
+    /// <summary>
+    /// 音声・字幕と一緒に移動・改名する拡張子（"." 付き）。
+    /// 合成音声ソフトの設定で出力される種類も順番も変わるため、ここに挙げたものは
+    /// 「その時点であれば一緒に、後から現れたら追いかけて」移動する。
+    /// </summary>
+    public IReadOnlyList<string> CompanionExtensions()
+    {
+        var list = new List<string>(2);
+        if (MoveLab) list.Add(".lab");
+        if (MoveSrt) list.Add(".srt");
+        return list;
+    }
+
     /// <summary>
     /// 話者サブフォルダをキャラクター単位にまとめるためのキャラクター名（任意）。
     /// ファイル名から取り出した話者名はユーザープリセット名（例: <c>琴葉 葵(通常)</c>）になり得るため、

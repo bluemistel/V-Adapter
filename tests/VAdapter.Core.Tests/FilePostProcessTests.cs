@@ -519,4 +519,23 @@ public class FilePostProcessTests
         Assert.Equal(4, route.Layer);
         Assert.Equal("琴葉 茜", route.Speaker);
     }
+
+    // --- 一緒に移動する付随ファイル ---
+
+    [Fact]
+    public void CompanionExtensions_DefaultIsEmpty()
+    {
+        // 既定 OFF。既存の利用者の ① に .lab / .srt が残る動作を変えない。
+        Assert.Empty(new FilePostProcessOptions().CompanionExtensions());
+    }
+
+    [Theory]
+    [InlineData(true, false, new[] { ".lab" })]
+    [InlineData(false, true, new[] { ".srt" })]
+    [InlineData(true, true, new[] { ".lab", ".srt" })]
+    public void CompanionExtensions_FollowCheckboxes(bool lab, bool srt, string[] expected)
+    {
+        var o = new FilePostProcessOptions { MoveLab = lab, MoveSrt = srt };
+        Assert.Equal(expected, o.CompanionExtensions());
+    }
 }

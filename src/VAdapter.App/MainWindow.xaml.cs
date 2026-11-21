@@ -403,16 +403,17 @@ public partial class MainWindow : Window
         await RunMacroAsync(row.Model);
     }
 
-    private async void OnHotkeyPressed(Macro macro) => await RunMacroAsync(macro);
+    // ショートカットから起動したときは、そのキーが離されてから命令を始める。
+    private async void OnHotkeyPressed(Macro macro) => await RunMacroAsync(macro, triggeredBy: macro.Shortcut);
 
-    private async Task RunMacroAsync(Macro macro)
+    private async Task RunMacroAsync(Macro macro, KeyCombination? triggeredBy = null)
     {
         var progress = new Progress<string>(Log);
         try
         {
             var result = await _state.Runner.RunAsync(
                 macro, _state.Library, progress, preferredTargetId: _activeTargetId,
-                integration: _state.Integration);
+                integration: _state.Integration, triggeredBy: triggeredBy);
             if (!result.Success)
                 Log($"=> 失敗: {result.Error}");
             else

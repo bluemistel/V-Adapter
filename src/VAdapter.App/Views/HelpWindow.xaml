@@ -170,6 +170,11 @@
                         </Border>
 
                         <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="{StaticResource B.TextSecondary}">
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.11 (β)</Run><LineBreak/>
+                            <Run FontWeight="SemiBold">［機能追加］</Run><LineBreak/>
+                            ・「音声の保存」の整理で、LAB（.lab）・SRT（.srt）も音声と一緒に移動・改名できるように。設定 →「音声の保存」→ ③ でチェックした種類が対象です（既定は OFF）<LineBreak/>
+                            <Run FontWeight="SemiBold">［修正］</Run><LineBreak/>
+                            ・Ctrl などを含むショートカットでマクロを動かすと、押したままの Ctrl が送信キーに重なる問題を修正（例: F5 が Ctrl+F5 として届く）。ショートカットのキーを離してから動き始めます<LineBreak/><LineBreak/>
                             <Run FontWeight="SemiBold" Foreground="{StaticResource B.TextPrimary}">v0.0.10 (β)</Run><LineBreak/>
                             <Run FontWeight="SemiBold">［機能追加］</Run><LineBreak/>
                             ・マクロに「方式」を追加。同じショートカットのまま、設定 →「合成音声ソフト」→「マクロの方式」で動きを切り替えられます<LineBreak/>
